@@ -68,6 +68,7 @@ export default function AuthenticatedLayout({
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
+  const theme = useMantineTheme();
 
   useEffect(() => {
     const getUser = async () => {
@@ -156,22 +157,29 @@ export default function AuthenticatedLayout({
               hiddenFrom="sm"
               size="sm"
             />
-            <Group gap="xs">
-              <ThemeIcon
-                size="lg"
-                radius="md"
-                variant="gradient"
-                gradient={{ from: "blue", to: "cyan" }}
-              >
-                <IconCar size={24} />
-              </ThemeIcon>
-              <Text size="xl" fw={700} style={{ letterSpacing: "-0.5px" }}>
-                MotoCare
-              </Text>
-            </Group>
           </Group>
 
-          <Group gap="xs">
+          <Group
+            style={{
+              position: "absolute",
+              left: "50%",
+              transform: "translateX(-50%)",
+            }}
+          >
+            <ThemeIcon
+              size="lg"
+              radius="md"
+              variant="gradient"
+              gradient={{ from: "blue", to: "cyan" }}
+            >
+              <IconCar size={24} />
+            </ThemeIcon>
+            <Text size="xl" fw={700} style={{ letterSpacing: "-0.5px" }}>
+              MotoCare
+            </Text>
+          </Group>
+
+          <Group>
             <Menu position="bottom-end" shadow="md" width={200}>
               <Menu.Target>
                 <UnstyledButton
@@ -185,7 +193,7 @@ export default function AuthenticatedLayout({
                     },
                   }}
                 >
-                  <Group gap={7}>
+                  <Group>
                     <Avatar
                       src={user?.user_metadata?.avatar_url}
                       alt={user?.email ?? ""}
@@ -195,7 +203,7 @@ export default function AuthenticatedLayout({
                       variant="gradient"
                       gradient={{ from: "blue", to: "cyan" }}
                     />
-                    <Stack gap={0} style={{ flex: 1 }}>
+                    <Stack gap={0} style={{ flex: 1 }} visibleFrom="sm">
                       <Text
                         size="sm"
                         fw={700}
@@ -226,6 +234,7 @@ export default function AuthenticatedLayout({
                       style={{
                         transition: "transform 0.2s ease",
                       }}
+                      visibleFrom="sm"
                     >
                       <IconChevronDown size={14} />
                     </ThemeIcon>
@@ -234,6 +243,30 @@ export default function AuthenticatedLayout({
               </Menu.Target>
               <Menu.Dropdown>
                 <Menu.Label>Account</Menu.Label>
+                <Menu.Item
+                  leftSection={
+                    <Avatar
+                      src={user?.user_metadata?.avatar_url}
+                      alt={user?.email ?? ""}
+                      radius="xl"
+                      size={24}
+                      color="blue"
+                      variant="gradient"
+                      gradient={{ from: "blue", to: "cyan" }}
+                    />
+                  }
+                  disabled
+                >
+                  <Stack gap={0}>
+                    <Text size="sm" fw={700}>
+                      {user?.user_metadata?.full_name || "User"}
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      {user?.email}
+                    </Text>
+                  </Stack>
+                </Menu.Item>
+                <Menu.Divider />
                 <Menu.Item
                   color="red"
                   leftSection={<IconLogout size={14} />}
@@ -258,6 +291,9 @@ export default function AuthenticatedLayout({
               component={Link}
               href={item.href}
               label={item.label}
+              onClick={() => {
+                if (opened) toggle();
+              }}
               leftSection={
                 <ThemeIcon
                   size="md"
@@ -289,6 +325,9 @@ export default function AuthenticatedLayout({
             <NavLink
               key={item.href}
               label={item.label}
+              onClick={() => {
+                if (opened) toggle();
+              }}
               leftSection={
                 <ThemeIcon
                   size="md"

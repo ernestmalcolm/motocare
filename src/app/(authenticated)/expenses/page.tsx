@@ -54,6 +54,8 @@ import {
 } from "@tabler/icons-react";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/supabase";
+import { notifications } from "@mantine/notifications";
+import Link from "next/link";
 
 type Expense = Database["public"]["Tables"]["expenses"]["Row"];
 type Vehicle = Database["public"]["Tables"]["cars"]["Row"];
@@ -127,27 +129,38 @@ export default function Expenses() {
 
       // Fetch vehicles for the current user
       const { data: vehiclesData, error: vehiclesError } = await supabase
-        .from("cars")
+        .from("vehicles")
         .select("*")
         .eq("user_id", session.user.id)
         .order("created_at", { ascending: false });
 
       if (vehiclesError) throw vehiclesError;
 
-      // Fetch expenses for the user's vehicles
-      const vehicleIds = vehiclesData?.map((v) => v.id) || [];
-      const { data: expensesData, error: expensesError } = await supabase
-        .from("expenses")
-        .select("*")
-        .in("vehicle_id", vehicleIds)
-        .order("date", { ascending: false });
-
-      if (expensesError) throw expensesError;
-
       setVehicles(vehiclesData || []);
-      setExpenses(expensesData || []);
+
+      // Only fetch expenses if there are vehicles
+      if (vehiclesData && vehiclesData.length > 0) {
+        const vehicleIds = vehiclesData.map((v) => v.id);
+        const { data: expensesData, error: expensesError } = await supabase
+          .from("expenses")
+          .select("*")
+          .in("vehicle_id", vehicleIds)
+          .order("date", { ascending: false });
+
+        if (expensesError) throw expensesError;
+        setExpenses(expensesData || []);
+      } else {
+        setExpenses([]);
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
+      notifications.show({
+        title: "Error",
+        message: "Failed to fetch data. Please try again.",
+        color: "red",
+      });
+      setVehicles([]);
+      setExpenses([]);
     } finally {
       setLoading(false);
     }
@@ -336,15 +349,91 @@ export default function Expenses() {
         <Stack gap="xl">
           <Group justify="space-between">
             <Stack gap={0}>
-              <Group gap="xs">
-                <Skeleton height={40} width={40} circle />
-                <Skeleton height={36} width={200} />
-              </Group>
+              <Skeleton height={36} width={200} />
               <Skeleton height={24} width={300} mt={4} />
             </Stack>
             <Skeleton height={36} width={120} />
           </Group>
           <Skeleton height={200} />
+        </Stack>
+      </Container>
+    );
+  }
+
+  if (vehicles.length === 0) {
+    return (
+      <Container size="xl">
+        <Stack gap="xl">
+          <Group justify="space-between">
+            <Stack gap={0}>
+              <Transition
+                mounted={mounted}
+                transition="slide-down"
+                duration={600}
+              >
+                {(styles) => (
+                  <div style={styles}>
+                    <Group gap="xs" wrap="nowrap">
+                      <ThemeIcon
+                        size={48}
+                        radius="xl"
+                        variant="gradient"
+                        gradient={{ from: "blue", to: "cyan", deg: 45 }}
+                      >
+                        <IconWallet size={28} />
+                      </ThemeIcon>
+                      <Title order={1}>Expenses</Title>
+                    </Group>
+                    <Text c="dimmed" size="lg" mt={4}>
+                      {welcomeMessage}
+                    </Text>
+                  </div>
+                )}
+              </Transition>
+            </Stack>
+          </Group>
+
+          <Transition
+            mounted={mounted}
+            transition="slide-down"
+            duration={600}
+            timingFunction="ease"
+          >
+            {(styles) => (
+              <Card
+                withBorder
+                radius="md"
+                p="xl"
+                className="text-center"
+                style={styles}
+              >
+                <Stack gap="xl" align="center">
+                  <ThemeIcon size={80} radius="xl" variant="light" color="blue">
+                    <IconCar size={40} />
+                  </ThemeIcon>
+                  <Stack gap="md">
+                    <Stack gap={0}>
+                      <Text size="xl" fw={700}>
+                        NO VEHICLES FOUND
+                      </Text>
+                      <Text c="dimmed" size="sm">
+                        Add your vehicles to start tracking expenses
+                      </Text>
+                    </Stack>
+                    <Button
+                      component={Link}
+                      href="/garage"
+                      leftSection={<IconPlus size={16} />}
+                      variant="gradient"
+                      gradient={{ from: "blue", to: "cyan", deg: 45 }}
+                    >
+                      Add Your First Vehicle
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Card>
+            )}
+          </Transition>
         </Stack>
       </Container>
     );

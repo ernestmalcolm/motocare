@@ -15,8 +15,15 @@ export type Database = {
           make: string;
           model: string;
           year: number;
+          type: "car" | "motorcycle" | "truck" | "van" | "other";
           license_plate: string;
-          image_url?: string;
+          color: string;
+          color_hex: string;
+          purchase_date: string;
+          purchase_price: number;
+          current_mileage: number;
+          last_service_date: string;
+          notes: string;
           created_at: string;
           updated_at: string;
           is_archived: boolean;

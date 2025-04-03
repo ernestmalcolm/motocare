@@ -19,6 +19,7 @@ import {
   Skeleton,
   Transition,
   Box,
+  Title,
 } from "@mantine/core";
 import {
   IconCar,
@@ -33,6 +34,8 @@ import {
   IconX,
   IconClock,
   IconCalendarTime,
+  IconPlus,
+  IconDashboard,
 } from "@tabler/icons-react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
@@ -43,11 +46,18 @@ type Vehicle = {
   make: string;
   model: string;
   year: number;
-  mileage: number;
-  last_service: string;
-  next_service: string;
-  fuel_type: string;
-  fuel_efficiency: number;
+  type: "car" | "motorcycle" | "truck" | "van" | "other";
+  license_plate: string;
+  color: string;
+  color_hex: string;
+  purchase_date: string;
+  purchase_price: number;
+  current_mileage: number;
+  last_service_date: string;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+  is_archived: boolean;
 };
 
 type MaintenanceRecord = {
@@ -182,15 +192,12 @@ export default function Dashboard() {
     const now = new Date();
 
     // Handle invalid or missing dates
-    const lastService = vehicle.last_service
-      ? new Date(vehicle.last_service)
-      : null;
-    const nextService = vehicle.next_service
-      ? new Date(vehicle.next_service)
+    const lastService = vehicle.last_service_date
+      ? new Date(vehicle.last_service_date)
       : null;
 
     // If no service dates are available, return a poor health status
-    if (!lastService || !nextService) {
+    if (!lastService) {
       return {
         score: 0,
         status: "poor",
@@ -207,7 +214,7 @@ export default function Dashboard() {
 
     // Calculate days until next service
     const daysUntilNextService = Math.floor(
-      (nextService.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      (lastService.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
     );
 
     // Calculate health score (0-100)
@@ -357,6 +364,95 @@ export default function Dashboard() {
       </Stack>
     </Card>
   );
+
+  if (loading) {
+    return (
+      <Container size="xl">
+        <Stack gap="lg">
+          <Group justify="space-between">
+            <Stack gap={0}>
+              <Skeleton height={28} width={200} />
+              <Skeleton height={16} width={120} />
+            </Stack>
+            <Skeleton height={36} width={120} />
+          </Group>
+          <Skeleton height={200} />
+        </Stack>
+      </Container>
+    );
+  }
+
+  if (vehicles.length === 0) {
+    return (
+      <Container size="xl">
+        <Stack gap="xl">
+          <Group justify="space-between">
+            <Stack gap={0}>
+              <Transition
+                mounted={mounted}
+                transition="slide-down"
+                duration={600}
+              >
+                {(styles) => (
+                  <div style={styles}>
+                    <Text size="xl" fw={700}>
+                      {getGreeting()}, {userName || "User"}!
+                    </Text>
+                    <Text c="dimmed" size="lg">
+                      {welcomeMessage}
+                    </Text>
+                  </div>
+                )}
+              </Transition>
+            </Stack>
+          </Group>
+
+          <Transition
+            mounted={mounted}
+            transition="slide-down"
+            duration={600}
+            timingFunction="ease"
+          >
+            {(styles) => (
+              <Card
+                withBorder
+                radius="md"
+                p="xl"
+                className="text-center"
+                style={styles}
+              >
+                <Stack gap="xl" align="center">
+                  <ThemeIcon size={80} radius="xl" variant="light" color="blue">
+                    <IconCar size={40} />
+                  </ThemeIcon>
+                  <Stack gap="md">
+                    <Stack gap={0}>
+                      <Text size="xl" fw={700}>
+                        NO VEHICLES FOUND
+                      </Text>
+                      <Text c="dimmed" size="sm">
+                        Add your vehicles to start tracking maintenance,
+                        expenses, and service history
+                      </Text>
+                    </Stack>
+                    <Button
+                      component={Link}
+                      href="/garage"
+                      leftSection={<IconPlus size={16} />}
+                      variant="gradient"
+                      gradient={{ from: "blue", to: "cyan", deg: 45 }}
+                    >
+                      Add Your First Vehicle
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Card>
+            )}
+          </Transition>
+        </Stack>
+      </Container>
+    );
+  }
 
   return (
     <Container size="xl">

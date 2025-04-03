@@ -58,11 +58,14 @@ import {
   IconX,
   IconRefresh,
   IconCar,
+  IconClipboardList,
+  IconBellRinging,
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/supabase";
+import Link from "next/link";
 
 type Reminder = {
   id: string;
@@ -87,7 +90,6 @@ type Car = {
   year: number;
   type: "car" | "motorcycle" | "truck" | "van" | "other";
   license_plate: string;
-  vin?: string;
   color?: string;
   purchase_date?: string;
   purchase_price?: number;
@@ -313,7 +315,6 @@ export default function Reminders() {
           year,
           type,
           license_plate,
-          vin,
           color,
           purchase_date,
           purchase_price,
@@ -632,34 +633,87 @@ export default function Reminders() {
             </Stack>
             <Skeleton height={36} width={120} />
           </Group>
+          <Skeleton height={200} />
+        </Stack>
+      </Container>
+    );
+  }
 
-          <Card withBorder radius="md" p="md">
-            <Stack gap="md">
-              <Group>
-                <Skeleton height={36} width="100%" />
-              </Group>
-              <Group gap="xs">
-                <Skeleton height={24} width={100} />
-              </Group>
+  if (vehicles.length === 0) {
+    return (
+      <Container size="xl">
+        <Stack gap="xl">
+          <Group justify="space-between">
+            <Stack gap={0}>
+              <Transition
+                mounted={mounted}
+                transition="slide-down"
+                duration={600}
+              >
+                {(styles) => (
+                  <div style={styles}>
+                    <Group gap="xs" wrap="nowrap">
+                      <ThemeIcon
+                        size={48}
+                        radius="xl"
+                        variant="gradient"
+                        gradient={{ from: "blue", to: "cyan", deg: 45 }}
+                      >
+                        <IconBellRinging size={28} />
+                      </ThemeIcon>
+                      <Title order={1}>Reminders</Title>
+                    </Group>
+                    <Text c="dimmed" size="lg" mt={4}>
+                      {welcomeMessage}
+                    </Text>
+                  </div>
+                )}
+              </Transition>
             </Stack>
-          </Card>
+          </Group>
 
-          <Stack gap="md">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} withBorder radius="md" p="md">
-                <Stack gap="md">
-                  <Group justify="space-between">
-                    <Skeleton height={24} width={200} />
-                    <Skeleton height={32} width={32} circle />
-                  </Group>
-                  <Skeleton height={16} width="100%" />
-                  <Group>
-                    <Skeleton height={24} width={100} />
-                  </Group>
+          <Transition
+            mounted={mounted}
+            transition="slide-down"
+            duration={600}
+            timingFunction="ease"
+          >
+            {(styles) => (
+              <Card
+                withBorder
+                radius="md"
+                p="xl"
+                className="text-center"
+                style={styles}
+              >
+                <Stack gap="xl" align="center">
+                  <ThemeIcon size={80} radius="xl" variant="light" color="blue">
+                    <IconCar size={40} />
+                  </ThemeIcon>
+                  <Stack gap="md">
+                    <Stack gap={0}>
+                      <Text size="xl" fw={700}>
+                        NO VEHICLES FOUND
+                      </Text>
+                      <Text c="dimmed" size="sm">
+                        Add your vehicles to start setting up maintenance
+                        reminders
+                      </Text>
+                    </Stack>
+                    <Button
+                      component={Link}
+                      href="/garage"
+                      leftSection={<IconPlus size={16} />}
+                      variant="gradient"
+                      gradient={{ from: "blue", to: "cyan", deg: 45 }}
+                    >
+                      Add Your First Vehicle
+                    </Button>
+                  </Stack>
                 </Stack>
               </Card>
-            ))}
-          </Stack>
+            )}
+          </Transition>
         </Stack>
       </Container>
     );
@@ -677,25 +731,32 @@ export default function Reminders() {
           {(styles) => (
             <Group justify="space-between" style={styles}>
               <Group gap="md">
-                <ThemeIcon
-                  size={48}
-                  radius="xl"
-                  variant="gradient"
-                  gradient={{ from: "blue", to: "cyan", deg: 45 }}
+                <Transition
+                  mounted={mounted}
+                  transition="slide-down"
+                  duration={600}
                 >
-                  <IconBell size={28} />
-                </ThemeIcon>
-                <Stack gap={0}>
-                  <Title order={1}>Reminders</Title>
-                  <Text
-                    c="dimmed"
-                    size="lg"
-                    fw={500}
-                    style={{ letterSpacing: "0.3px" }}
-                  >
-                    {welcomeMessage}
-                  </Text>
-                </Stack>
+                  {(styles) => (
+                    <div style={styles}>
+                      <Group gap="xs">
+                        <ThemeIcon
+                          size={48}
+                          radius="xl"
+                          variant="gradient"
+                          gradient={{ from: "blue", to: "cyan", deg: 45 }}
+                        >
+                          <IconBell size={28} />
+                        </ThemeIcon>
+                        <Stack gap={0}>
+                          <Title order={1}>Reminders</Title>
+                          <Text c="dimmed" size="lg">
+                            {welcomeMessage}
+                          </Text>
+                        </Stack>
+                      </Group>
+                    </div>
+                  )}
+                </Transition>
               </Group>
               <Button
                 leftSection={<IconPlus size={20} />}

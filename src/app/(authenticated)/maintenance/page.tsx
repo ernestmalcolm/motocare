@@ -56,6 +56,8 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { supabase } from "@/lib/supabase";
+import type { Database } from "@/lib/supabase";
+import Link from "next/link";
 
 interface MaintenanceRecord {
   id: string;
@@ -69,11 +71,7 @@ interface MaintenanceRecord {
   notes: string;
   created_at: string;
   updated_at: string;
-  vehicle?: {
-    make: string;
-    model: string;
-    year: number;
-  };
+  vehicle?: Database["public"]["Tables"]["cars"]["Row"];
 }
 
 export default function MaintenancePage() {
@@ -144,14 +142,17 @@ export default function MaintenancePage() {
 
       if (error) throw error;
       setVehicles(data || []);
+      setLoading(false);
+      setTimeout(() => setMounted(true), 200);
     } catch (error) {
       console.error("Error fetching vehicles:", error);
+      setLoading(false);
+      setTimeout(() => setMounted(true), 200);
     }
   };
 
   const fetchRecords = async () => {
     try {
-      setLoading(true);
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -180,8 +181,6 @@ export default function MaintenancePage() {
         message: "Failed to fetch maintenance records",
         color: "red",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -191,9 +190,7 @@ export default function MaintenancePage() {
 
   useEffect(() => {
     if (vehicles.length > 0) {
-      fetchRecords().finally(() => {
-        setTimeout(() => setMounted(true), 200);
-      });
+      fetchRecords();
     }
   }, [vehicles]);
 
@@ -413,12 +410,86 @@ export default function MaintenancePage() {
             </Stack>
             <Skeleton height={36} width={120} />
           </Group>
+          <Skeleton height={200} />
+        </Stack>
+      </Container>
+    );
+  }
 
-          <Card withBorder radius="md" p="md">
-            <Stack gap="md">
-              <Skeleton height={400} />
+  if (vehicles.length === 0) {
+    return (
+      <Container size="xl">
+        <Stack gap="xl">
+          <Group justify="space-between">
+            <Stack gap={0}>
+              <Transition
+                mounted={mounted}
+                transition="slide-down"
+                duration={600}
+              >
+                {(styles) => (
+                  <div style={styles}>
+                    <Group gap="xs" wrap="nowrap">
+                      <ThemeIcon
+                        size={48}
+                        radius="xl"
+                        variant="gradient"
+                        gradient={{ from: "blue", to: "cyan", deg: 45 }}
+                      >
+                        <IconTools size={28} />
+                      </ThemeIcon>
+                      <Title order={1}>Maintenance</Title>
+                    </Group>
+                    <Text c="dimmed" size="lg" mt={4}>
+                      {welcomeMessage}
+                    </Text>
+                  </div>
+                )}
+              </Transition>
             </Stack>
-          </Card>
+          </Group>
+
+          <Transition
+            mounted={mounted}
+            transition="slide-down"
+            duration={600}
+            timingFunction="ease"
+          >
+            {(styles) => (
+              <Card
+                withBorder
+                radius="md"
+                p="xl"
+                className="text-center"
+                style={styles}
+              >
+                <Stack gap="xl" align="center">
+                  <ThemeIcon size={80} radius="xl" variant="light" color="blue">
+                    <IconCar size={40} />
+                  </ThemeIcon>
+                  <Stack gap="md">
+                    <Stack gap={0}>
+                      <Text size="xl" fw={700}>
+                        NO VEHICLES FOUND
+                      </Text>
+                      <Text c="dimmed" size="sm">
+                        Add your vehicles to start tracking maintenance records
+                      </Text>
+                    </Stack>
+                    <Button
+                      component={Link}
+                      href="/garage"
+                      leftSection={<IconPlus size={16} />}
+                      variant="gradient"
+                      gradient={{ from: "blue", to: "cyan", deg: 45 }}
+                    >
+                      Add Your First Vehicle
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Card>
+            )}
+          </Transition>
         </Stack>
       </Container>
     );
@@ -445,10 +516,30 @@ export default function MaintenancePage() {
                   <IconTools size={28} />
                 </ThemeIcon>
                 <Stack gap={0}>
-                  <Title order={1}>Maintenance Records</Title>
-                  <Text c="dimmed" size="lg">
-                    {welcomeMessage}
-                  </Text>
+                  <Transition
+                    mounted={mounted}
+                    transition="slide-down"
+                    duration={600}
+                  >
+                    {(styles) => (
+                      <div style={styles}>
+                        <Group gap="xs" wrap="nowrap">
+                          <ThemeIcon
+                            size={48}
+                            radius="xl"
+                            variant="gradient"
+                            gradient={{ from: "blue", to: "cyan", deg: 45 }}
+                          >
+                            <IconTools size={28} />
+                          </ThemeIcon>
+                          <Title order={1}>Maintenance</Title>
+                        </Group>
+                        <Text c="dimmed" size="lg" mt={4}>
+                          {welcomeMessage}
+                        </Text>
+                      </div>
+                    )}
+                  </Transition>
                 </Stack>
               </Group>
               <Button

@@ -17,6 +17,7 @@ import {
   useMantineTheme,
   ActionIcon,
 } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { IconCar, IconMenu2, IconX } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -32,6 +33,37 @@ export function LandingNavbar() {
   const [scrolled, setScrolled] = useState(false);
   const theme = useMantineTheme();
   const pathname = usePathname();
+  const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`);
+
+  const handleNavClick = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    href: string
+  ) => {
+    e.preventDefault();
+
+    // Close menu on mobile
+    if (isMobile && opened) {
+      setOpened(false);
+    }
+
+    // Get the target element
+    const element = document.querySelector(href);
+    if (element) {
+      // Get the element's position
+      const rect = element.getBoundingClientRect();
+      const scrollTop =
+        window.pageYOffset || document.documentElement.scrollTop;
+      const targetPosition = rect.top + scrollTop - 80; // 80px offset for header
+
+      // Wait a bit before scrolling
+      setTimeout(() => {
+        window.scrollTo({
+          top: targetPosition,
+          behavior: "smooth",
+        });
+      }, 100);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -93,8 +125,7 @@ export function LandingNavbar() {
           <Group gap="xl" visibleFrom="sm">
             <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
               <UnstyledButton
-                component="a"
-                href="#about"
+                onClick={(e) => handleNavClick(e, "#about")}
                 style={{
                   textDecoration: "none",
                   color: theme.colors.gray[7],
@@ -121,8 +152,7 @@ export function LandingNavbar() {
             </motion.div>
             <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
               <UnstyledButton
-                component="a"
-                href="#features"
+                onClick={(e) => handleNavClick(e, "#features")}
                 style={{
                   textDecoration: "none",
                   color: theme.colors.gray[7],
@@ -149,8 +179,7 @@ export function LandingNavbar() {
             </motion.div>
             <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
               <UnstyledButton
-                component="a"
-                href="#pricing"
+                onClick={(e) => handleNavClick(e, "#pricing")}
                 style={{
                   textDecoration: "none",
                   color: theme.colors.gray[7],
@@ -177,8 +206,7 @@ export function LandingNavbar() {
             </motion.div>
             <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
               <UnstyledButton
-                component="a"
-                href="#testimonials"
+                onClick={(e) => handleNavClick(e, "#testimonials")}
                 style={{
                   textDecoration: "none",
                   color: theme.colors.gray[7],
@@ -292,9 +320,22 @@ export function LandingNavbar() {
             {navItems.map((item) => (
               <UnstyledButton
                 key={item.label}
-                component={Link}
-                href={item.href}
-                onClick={() => setOpened(false)}
+                onClick={() => {
+                  setOpened(false);
+                  const element = document.querySelector(
+                    item.href.replace("/", "")
+                  );
+                  if (element) {
+                    const rect = element.getBoundingClientRect();
+                    const scrollTop =
+                      window.pageYOffset || document.documentElement.scrollTop;
+                    const targetPosition = rect.top + scrollTop - 80;
+                    window.scrollTo({
+                      top: targetPosition,
+                      behavior: "smooth",
+                    });
+                  }
+                }}
                 style={{
                   textDecoration: "none",
                   color: theme.colors.gray[7],

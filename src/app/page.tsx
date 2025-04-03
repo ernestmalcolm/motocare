@@ -560,20 +560,44 @@ export default function LandingPage() {
                     Struggle
                   </Title>
                   <Text size="lg" c="dimmed">
-                    Meet Epiphania, a passionate car enthusiast who loved her
-                    vehicles but struggled with the chaos of maintenance
-                    management. Her garage was home to three cherished cars,
-                    each with its own maintenance schedule, service history, and
-                    growing pile of receipts.
+                    Meet{" "}
+                    <Text
+                      component="span"
+                      variant="gradient"
+                      gradient={{ from: "blue", to: "cyan" }}
+                    >
+                      Malcolm
+                    </Text>
+                    , a passionate car enthusiast who has loved cars since he
+                    was a kid. His garage was home to his prized{" "}
+                    <Text
+                      component="span"
+                      variant="gradient"
+                      gradient={{ from: "blue", to: "cyan" }}
+                    >
+                      Nissan
+                    </Text>
+                    , a car he cherished deeply and maintained with utmost care.
+                    Despite his passion, he struggled with tracking maintenance
+                    due to incomplete service history from the previous owner
+                    and scattered maintenance records.
                   </Text>
                   <Text size="lg" c="dimmed">
-                    The breaking point came when her prized Mercedes developed
-                    major gearbox issues. She had completely forgotten about the
-                    transmission fluid change that was due six months ago. The
-                    repair cost her a fortune, and as she sat in the mechanic's
-                    waiting room, she wished there was a better way to manage
-                    vehicle maintenance - a digital platform that would keep
-                    track of everything, from routine oil changes to major
+                    The breaking point came when his beloved{" "}
+                    <Text
+                      component="span"
+                      variant="gradient"
+                      gradient={{ from: "blue", to: "cyan" }}
+                    >
+                      Nissan
+                    </Text>{" "}
+                    developed major gearbox issues. Without maintenance records
+                    from the previous owner, he had no way of knowing the
+                    transmission fluid change was due at least six months ago.
+                    The repair cost him a fortune, and as he sat in the
+                    mechanic's waiting room, he wished there was a better way to
+                    manage vehicle maintenance - a digital platform that would
+                    keep track of everything, from routine oil changes to major
                     service intervals, making it as simple as checking your
                     phone.
                   </Text>
@@ -1356,10 +1380,33 @@ export default function LandingPage() {
                     MotoCare
                   </Title>
                   <Text size="sm" style={{ color: "rgba(255,255,255,0.7)" }}>
-                    From Epiphania's wish to save her Mercedes, to helping
-                    thousands of car enthusiasts manage their vehicles better.
-                    Her vision of stress-free car maintenance is now a reality,
-                    and she probably saved enough to buy a new Merc! 🚗✨
+                    From{" "}
+                    <Text
+                      component="span"
+                      variant="gradient"
+                      gradient={{ from: "blue", to: "cyan" }}
+                    >
+                      Malcolm
+                    </Text>
+                    's wish to save his{" "}
+                    <Text
+                      component="span"
+                      variant="gradient"
+                      gradient={{ from: "blue", to: "cyan" }}
+                    >
+                      Nissan
+                    </Text>
+                    , to helping thousands of car enthusiasts manage their
+                    vehicles better. His vision of stress-free car maintenance
+                    is now a reality, and he probably saved enough to buy a new{" "}
+                    <Text
+                      component="span"
+                      variant="gradient"
+                      gradient={{ from: "blue", to: "cyan" }}
+                    >
+                      Nissan
+                    </Text>
+                    ! 🚗✨
                   </Text>
                 </Stack>
               </motion.div>

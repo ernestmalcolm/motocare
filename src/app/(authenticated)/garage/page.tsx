@@ -64,6 +64,7 @@ import {
   IconAlertCircle,
   IconCurrencyDollar,
   IconBuilding,
+  IconWallet,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { useDisclosure } from "@mantine/hooks";
@@ -258,14 +259,13 @@ export default function GaragePage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [addModalOpened, setAddModalOpened] = useState(false);
+  const [editModalOpened, { open: openEditModal, close: closeEditModal }] =
+    useDisclosure(false);
   const [
     deleteModalOpened,
     { open: openDeleteModal, close: closeDeleteModal },
   ] = useDisclosure(false);
-  const [editModalOpened, { open: openEditModal, close: closeEditModal }] =
-    useDisclosure(false);
-  const [addModalOpened, { open: openAddModal, close: closeAddModal }] =
-    useDisclosure(false);
   const [
     serviceHistoryModalOpened,
     { open: openServiceHistoryModal, close: closeServiceHistoryModal },
@@ -464,7 +464,7 @@ export default function GaragePage() {
 
       // Refresh the vehicles list
       fetchVehicles();
-      closeAddModal();
+      setAddModalOpened(false);
       notifications.show({
         title: "Success",
         message: "Vehicle added successfully",
@@ -589,10 +589,33 @@ export default function GaragePage() {
     }
   };
 
+  const handleAddVehicle = () => {
+    console.log("handleAddVehicle clicked");
+    setSelectedVehicle(null);
+    console.log("Setting addForm with default values");
+    setAddForm({
+      make: "",
+      model: "",
+      year: new Date().getFullYear(),
+      type: "car",
+      license_plate: "",
+      color: "",
+      purchase_date: undefined,
+      purchase_price: undefined,
+      current_mileage: undefined,
+      last_service_date: undefined,
+      notes: "",
+    });
+    console.log("Opening add modal");
+    setAddModalOpened(true);
+  };
+
   useEffect(() => {
     console.log("useEffect triggered");
     fetchVehicles().finally(() => {
-      setTimeout(() => setMounted(true), 200);
+      setTimeout(() => {
+        setMounted(true);
+      });
     });
   }, []);
 
@@ -666,584 +689,632 @@ export default function GaragePage() {
             </Stack>
             <Skeleton height={36} width={120} />
           </Group>
-
-          {/* Statistics Cards Skeleton */}
-          <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md">
-            {[1, 2, 3, 4].map((i) => (
-              <StatisticsCardSkeleton key={i} />
-            ))}
-          </SimpleGrid>
-
-          {/* Search Bar Skeleton */}
-          <Card withBorder radius="md" p="md">
-            <Stack gap="md">
-              <Group>
-                <Skeleton height={36} width="100%" />
-              </Group>
-              <Group gap="xs">
-                <Skeleton height={24} width={100} />
-              </Group>
-            </Stack>
-          </Card>
-
-          {/* Vehicle Cards Skeleton */}
-          <Grid>
-            {[1, 2, 3].map((i) => (
-              <Grid.Col key={i} span={{ base: 12, sm: 6, md: 4 }}>
-                <VehicleCardSkeleton />
-              </Grid.Col>
-            ))}
-          </Grid>
+          <Skeleton height={200} />
         </Stack>
       </Container>
     );
   }
 
   return (
-    <Container size="lg" py="xl">
-      <Stack gap="xl">
-        <Group justify="space-between">
-          <Group gap="md">
-            <ThemeIcon
-              size={48}
-              radius="xl"
+    <Container size="xl">
+      {/* Add Vehicle Modal - Always rendered */}
+      <Modal
+        opened={addModalOpened}
+        onClose={() => setAddModalOpened(false)}
+        title={
+          <Group gap="xs">
+            <ThemeIcon variant="light" color="blue" size="sm">
+              <IconPlus size={16} />
+            </ThemeIcon>
+            <Text fw={600} size="lg">
+              ADD NEW VEHICLE
+            </Text>
+          </Group>
+        }
+        size="lg"
+        padding="xl"
+      >
+        <Stack gap="xl">
+          <SimpleGrid cols={2} spacing="md">
+            <TextInput
+              label="Make"
+              placeholder="Enter vehicle make"
+              required
+              value={addForm.make}
+              onChange={(e) => setAddForm({ ...addForm, make: e.target.value })}
+            />
+            <TextInput
+              label="Model"
+              placeholder="Enter vehicle model"
+              required
+              value={addForm.model}
+              onChange={(e) =>
+                setAddForm({ ...addForm, model: e.target.value })
+              }
+            />
+            <NumberInput
+              label="Year"
+              placeholder="Enter vehicle year"
+              required
+              value={addForm.year}
+              onChange={(value) =>
+                setAddForm({ ...addForm, year: Number(value) })
+              }
+            />
+            <TextInput
+              label="License Plate"
+              placeholder="Enter license plate (e.g., 111AAA)"
+              required
+              value={addForm.license_plate}
+              onChange={(e) => {
+                const value = e.target.value.toUpperCase();
+                if (value.length <= 6) {
+                  setAddForm({ ...addForm, license_plate: value });
+                }
+              }}
+              error={
+                addForm.license_plate &&
+                !/^\d{3}[A-Z]{3}$/.test(addForm.license_plate)
+                  ? "Format must be 111AAA"
+                  : null
+              }
+            />
+            <Select
+              label="Vehicle Type"
+              placeholder="Select vehicle type"
+              required
+              value={addForm.type}
+              onChange={(value) =>
+                setAddForm({ ...addForm, type: value as Vehicle["type"] })
+              }
+              data={[
+                { value: "car", label: "Car" },
+                { value: "motorcycle", label: "Motorcycle" },
+                { value: "truck", label: "Truck" },
+                { value: "van", label: "Van" },
+                { value: "other", label: "Other" },
+              ]}
+            />
+          </SimpleGrid>
+
+          <Group grow>
+            <TextInput
+              label="Color Name"
+              placeholder="e.g., Metallic Blue"
+              value={addForm.color}
+              onChange={(e) =>
+                setAddForm({ ...addForm, color: e.target.value })
+              }
+            />
+            <ColorInput
+              label="Color"
+              placeholder="Select color"
+              value={addForm.color_hex}
+              onChange={(value) => setAddForm({ ...addForm, color_hex: value })}
+              format="hex"
+              swatches={Object.keys(COLOR_MAP)}
+            />
+          </Group>
+
+          <SimpleGrid cols={2} spacing="md">
+            <NumberInput
+              label="Current Mileage"
+              placeholder="Enter current mileage"
+              value={addForm.current_mileage}
+              onChange={(value) =>
+                setAddForm({ ...addForm, current_mileage: Number(value) })
+              }
+              thousandSeparator=","
+              min={0}
+              error={
+                addForm.current_mileage && addForm.current_mileage < 0
+                  ? "Mileage cannot be negative"
+                  : null
+              }
+            />
+            <DateInput
+              label="Purchase Date"
+              placeholder="Select purchase date"
+              value={
+                addForm.purchase_date
+                  ? new Date(addForm.purchase_date)
+                  : undefined
+              }
+              onChange={(value) =>
+                setAddForm({ ...addForm, purchase_date: value?.toISOString() })
+              }
+              maxDate={new Date()}
+              error={
+                addForm.purchase_date &&
+                new Date(addForm.purchase_date) > new Date()
+                  ? "Purchase date cannot be in the future"
+                  : null
+              }
+            />
+            <NumberInput
+              label="Purchase Price"
+              placeholder="Enter purchase price"
+              value={addForm.purchase_price}
+              onChange={(value) =>
+                setAddForm({ ...addForm, purchase_price: Number(value) })
+              }
+              thousandSeparator=","
+              prefix="TZS"
+            />
+            <DateInput
+              label="Last Service Date"
+              placeholder="Select last service date"
+              value={
+                addForm.last_service_date
+                  ? new Date(addForm.last_service_date)
+                  : undefined
+              }
+              onChange={(value) =>
+                setAddForm({
+                  ...addForm,
+                  last_service_date: value?.toISOString(),
+                })
+              }
+            />
+          </SimpleGrid>
+
+          <Textarea
+            label="Notes"
+            placeholder="Enter any additional notes"
+            value={addForm.notes}
+            onChange={(e) => setAddForm({ ...addForm, notes: e.target.value })}
+            minRows={3}
+          />
+
+          <Group justify="flex-end" mt="md">
+            <Button variant="light" onClick={() => setAddModalOpened(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAdd}>Add Vehicle</Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {vehicles.length === 0 ? (
+        <Stack gap="xl">
+          <Group justify="space-between">
+            <Stack gap={0}>
+              <Transition
+                mounted={mounted}
+                transition="slide-down"
+                duration={600}
+              >
+                {(styles) => (
+                  <div style={styles}>
+                    <Group gap="xs" wrap="nowrap">
+                      <ThemeIcon
+                        size={48}
+                        radius="xl"
+                        variant="gradient"
+                        gradient={{ from: "blue", to: "cyan", deg: 45 }}
+                      >
+                        <IconCar size={28} />
+                      </ThemeIcon>
+                      <Title order={1}>Garage</Title>
+                    </Group>
+                    <Text c="dimmed" size="lg" mt={4}>
+                      {welcomeMessage}
+                    </Text>
+                  </div>
+                )}
+              </Transition>
+            </Stack>
+            <Button
+              leftSection={<IconPlus size={20} />}
+              onClick={handleAddVehicle}
+              size="lg"
               variant="gradient"
               gradient={{ from: "blue", to: "cyan", deg: 45 }}
             >
-              <IconCar size={28} />
-            </ThemeIcon>
-            <Stack gap={0}>
-              <Group gap="xs">
-                <Title order={1}>My Garage</Title>
-                <Badge variant="light" color="blue" size="lg">
-                  {stats.totalVehicles} Vehicles
-                </Badge>
-              </Group>
-              <Text c="dimmed" size="lg">
-                {welcomeMessage}
-              </Text>
-            </Stack>
+              Add Vehicle
+            </Button>
           </Group>
-          <Button
-            leftSection={<IconPlus size={20} />}
-            onClick={openAddModal}
-            size="lg"
-            variant="gradient"
-            gradient={{ from: "blue", to: "cyan", deg: 45 }}
-          >
-            Add Vehicle
-          </Button>
-        </Group>
 
-        {/* Statistics Cards */}
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-          {loading ? (
-            <>
-              <Card withBorder radius="md" p="md">
-                <Group gap="md">
-                  <Skeleton height={40} circle />
-                  <Stack gap={4} style={{ flex: 1 }}>
-                    <Skeleton height={24} width="60%" />
-                    <Skeleton height={16} width="40%" />
+          <Transition mounted={mounted} transition="slide-down" duration={600}>
+            {(styles) => (
+              <Card
+                withBorder
+                radius="md"
+                p="xl"
+                className="text-center"
+                style={styles}
+              >
+                <Stack gap="xl" align="center">
+                  <ThemeIcon size={80} radius="xl" variant="light" color="blue">
+                    <IconCar size={40} />
+                  </ThemeIcon>
+                  <Stack gap={0}>
+                    <Stack gap={0}>
+                      <Text size="xl" fw={700}>
+                        NO VEHICLES FOUND
+                      </Text>
+                      <Text c="dimmed" size="sm">
+                        Add your vehicles to start tracking maintenance,
+                        expenses, and service history
+                      </Text>
+                    </Stack>
                   </Stack>
-                </Group>
+                </Stack>
               </Card>
-              <Card withBorder radius="md" p="md">
-                <Group gap="md">
-                  <Skeleton height={40} circle />
-                  <Stack gap={4} style={{ flex: 1 }}>
-                    <Skeleton height={24} width="60%" />
-                    <Skeleton height={16} width="40%" />
-                  </Stack>
-                </Group>
-              </Card>
-              <Card withBorder radius="md" p="md">
-                <Group gap="md">
-                  <Skeleton height={40} circle />
-                  <Stack gap={4} style={{ flex: 1 }}>
-                    <Skeleton height={24} width="60%" />
-                    <Skeleton height={16} width="40%" />
-                  </Stack>
-                </Group>
-              </Card>
-            </>
-          ) : (
-            <>
+            )}
+          </Transition>
+        </Stack>
+      ) : (
+        <Stack gap="xl">
+          <Group justify="space-between">
+            <Stack gap={0}>
               <Transition
                 mounted={mounted}
                 transition="slide-down"
                 duration={600}
               >
                 {(styles) => (
-                  <Card withBorder radius="md" p="md" style={styles}>
-                    <Group gap="md">
+                  <div style={styles}>
+                    <Group gap="xs" wrap="nowrap">
                       <ThemeIcon
-                        size="xl"
-                        radius="md"
-                        variant="light"
-                        color="blue"
+                        size={48}
+                        radius="xl"
+                        variant="gradient"
+                        gradient={{ from: "blue", to: "cyan", deg: 45 }}
                       >
-                        <IconCar size={24} />
+                        <IconCar size={28} />
                       </ThemeIcon>
-                      <Stack gap={0}>
-                        <Text size="xl" fw={700}>
-                          {stats.totalVehicles}
-                        </Text>
-                        <Text size="sm" c="dimmed">
-                          Vehicles in Garage
-                        </Text>
-                        <Text size="xs" c="dimmed" mt={4}>
-                          {stats.averageAge} years average age
-                        </Text>
-                      </Stack>
+                      <Title order={1}>Garage</Title>
                     </Group>
-                  </Card>
+                    <Text c="dimmed" size="lg" mt={4}>
+                      {welcomeMessage}
+                    </Text>
+                  </div>
                 )}
               </Transition>
+            </Stack>
+            <Button
+              leftSection={<IconPlus size={20} />}
+              onClick={handleAddVehicle}
+              size="lg"
+              variant="gradient"
+              gradient={{ from: "blue", to: "cyan", deg: 45 }}
+            >
+              Add Vehicle
+            </Button>
+          </Group>
 
-              <Transition
-                mounted={mounted}
-                transition="slide-down"
-                duration={600}
-                timingFunction="ease"
-              >
-                {(styles) => (
-                  <Card
-                    withBorder
-                    radius="md"
-                    p="md"
-                    style={{ ...styles, transitionDelay: "150ms" }}
-                  >
-                    <Group gap="md">
-                      <ThemeIcon
-                        size="xl"
-                        radius="md"
-                        variant="light"
-                        color="green"
-                      >
-                        <IconGauge size={24} />
-                      </ThemeIcon>
-                      <Stack gap={0}>
-                        <Text size="xl" fw={700}>
-                          {stats.averageMileage.toLocaleString()}
-                        </Text>
-                        <Text size="sm" c="dimmed">
-                          Average Mileage
-                        </Text>
-                        <Text size="xs" c="dimmed" mt={4}>
-                          Per vehicle
-                        </Text>
-                      </Stack>
-                    </Group>
-                  </Card>
-                )}
-              </Transition>
+          {/* Statistics Cards */}
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
+            <Card withBorder radius="md" p="md">
+              <Group gap="md">
+                <ThemeIcon size={48} radius="xl" variant="light" color="blue">
+                  <IconCar size={24} />
+                </ThemeIcon>
+                <Stack gap={4}>
+                  <Text size="xl" fw={700}>
+                    {stats.totalVehicles}
+                  </Text>
+                  <Text size="sm" c="dimmed">
+                    Total Vehicles
+                  </Text>
+                </Stack>
+              </Group>
+            </Card>
 
-              <Transition
-                mounted={mounted}
-                transition="slide-down"
-                duration={600}
-                timingFunction="ease"
-              >
-                {(styles) => (
-                  <Card
-                    withBorder
-                    radius="md"
-                    p="md"
-                    style={{ ...styles, transitionDelay: "300ms" }}
-                  >
-                    <Group gap="md">
-                      <ThemeIcon
-                        size="xl"
-                        radius="md"
-                        variant="light"
-                        color="yellow"
-                      >
-                        <IconTools size={24} />
-                      </ThemeIcon>
-                      <Stack gap={0}>
-                        <Text size="xl" fw={700}>
-                          {stats.vehiclesNeedingService}
-                        </Text>
-                        <Text size="sm" c="dimmed">
-                          Need Service
-                        </Text>
-                        <Text size="xs" c="dimmed" mt={4}>
-                          {stats.serviceDueIn30Days} due in 30 days
-                        </Text>
-                      </Stack>
-                    </Group>
-                  </Card>
-                )}
-              </Transition>
-            </>
-          )}
-        </SimpleGrid>
+            <Card withBorder radius="md" p="md">
+              <Group gap="md">
+                <ThemeIcon size={48} radius="xl" variant="light" color="green">
+                  <IconGauge size={24} />
+                </ThemeIcon>
+                <Stack gap={4}>
+                  <Text size="xl" fw={700}>
+                    {stats.averageMileage.toLocaleString()}
+                  </Text>
+                  <Text size="sm" c="dimmed">
+                    Average Mileage
+                  </Text>
+                </Stack>
+              </Group>
+            </Card>
 
-        {/* Search and Filter Bar */}
-        <Card withBorder radius="md" p="md">
-          <Stack gap="md">
-            <Group gap="md" wrap="wrap" align="flex-end">
-              <Select
-                label="Type"
-                placeholder="All types"
-                value={selectedType}
-                onChange={(value) => setSelectedType(value || "all")}
-                data={[
-                  { value: "all", label: "All types" },
-                  { value: "car", label: "Car" },
-                  { value: "motorcycle", label: "Motorcycle" },
-                  { value: "truck", label: "Truck" },
-                  { value: "van", label: "Van" },
-                ]}
-                leftSection={<IconCar size={16} />}
-                style={{ minWidth: 200 }}
-                clearable
-              />
-              <DatePickerInput
-                type="range"
-                label="Purchase Date Range"
-                value={dateRange}
-                onChange={setDateRange}
-                leftSection={<IconCalendar size={16} />}
-                style={{ minWidth: 250 }}
-                clearable
-              />
-              <TextInput
-                label="Search"
-                placeholder="Search vehicles..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.currentTarget.value)}
-                leftSection={<IconSearch size={16} />}
-                style={{ minWidth: 200 }}
-                __clearable
-              />
-              <Button
-                variant="light"
-                color="gray"
-                onClick={() => {
-                  setSelectedType("all");
-                  setDateRange([null, null]);
-                  setSearchQuery("");
-                }}
-                leftSection={<IconFilter size={16} />}
-              >
-                Reset Filters
-              </Button>
-            </Group>
-          </Stack>
-        </Card>
+            <Card withBorder radius="md" p="md">
+              <Group gap="md">
+                <ThemeIcon size={48} radius="xl" variant="light" color="yellow">
+                  <IconTools size={24} />
+                </ThemeIcon>
+                <Stack gap={4}>
+                  <Text size="xl" fw={700}>
+                    {stats.vehiclesNeedingService}
+                  </Text>
+                  <Text size="sm" c="dimmed">
+                    Need Service
+                  </Text>
+                </Stack>
+              </Group>
+            </Card>
 
-        {vehicles.length === 0 ? (
-          <Card
-            withBorder
-            p="xl"
-            radius="md"
-            style={{
-              background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
-            }}
-          >
-            <Stack align="center" gap="xl">
-              <ThemeIcon size={80} radius="xl" variant="light" color="blue">
-                <IconCar size={40} />
-              </ThemeIcon>
-              <Stack gap="xs" align="center">
-                <Text size="xl" fw={700}>
-                  Your Garage is Empty
-                </Text>
-                <Text size="lg" c="dimmed" ta="center" maw={400}>
-                  Start by adding your first vehicle to track its maintenance,
-                  expenses, and service history.
-                </Text>
-              </Stack>
-              <Button
-                leftSection={<IconPlus size={20} />}
-                onClick={openAddModal}
-                size="lg"
-                variant="gradient"
-                gradient={{ from: "blue", to: "cyan", deg: 45 }}
-              >
-                Add Your First Vehicle
-              </Button>
+            <Card withBorder radius="md" p="md">
+              <Group gap="md">
+                <ThemeIcon size={48} radius="xl" variant="light" color="red">
+                  <IconCurrencyDollar size={24} />
+                </ThemeIcon>
+                <Stack gap={4}>
+                  <Text size="xl" fw={700}>
+                    TZS {stats.totalValue.toLocaleString()}
+                  </Text>
+                  <Text size="sm" c="dimmed">
+                    Total Value
+                  </Text>
+                </Stack>
+              </Group>
+            </Card>
+          </SimpleGrid>
+
+          {/* Search and Filter */}
+          <Card withBorder radius="md" p="md">
+            <Stack gap="md">
+              <Group gap="md">
+                <TextInput
+                  placeholder="Search vehicles..."
+                  leftSection={<IconSearch size={16} />}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{ flex: 1 }}
+                />
+                <Select
+                  placeholder="Filter by type"
+                  value={selectedType}
+                  onChange={(value) => setSelectedType(value || "all")}
+                  data={[
+                    { value: "all", label: "All Types" },
+                    { value: "car", label: "Cars" },
+                    { value: "motorcycle", label: "Motorcycles" },
+                    { value: "truck", label: "Trucks" },
+                    { value: "van", label: "Vans" },
+                  ]}
+                  leftSection={<IconFilter size={16} />}
+                />
+                <DatePickerInput
+                  type="range"
+                  placeholder="Filter by purchase date"
+                  value={dateRange}
+                  onChange={setDateRange}
+                  leftSection={<IconCalendar size={16} />}
+                />
+              </Group>
             </Stack>
           </Card>
-        ) : (
-          <Grid>
-            {filteredVehicles.map((vehicle, index) => {
-              // Calculate the span based on number of vehicles
-              let span;
-              if (filteredVehicles.length === 1) {
-                span = { base: 12, sm: 12, md: 12, lg: 12 }; // Full width
-              } else if (filteredVehicles.length === 2) {
-                span = { base: 12, sm: 6, md: 6, lg: 6 }; // Two columns
-              } else if (filteredVehicles.length === 3) {
-                span = { base: 12, sm: 6, md: 4, lg: 4 }; // Three columns
-              } else {
-                span = { base: 12, sm: 6, md: 4, lg: 4 }; // Three columns with wrapping
-              }
 
-              return (
-                <Grid.Col key={vehicle.id} span={span}>
-                  <Transition
-                    mounted={mounted}
-                    transition="slide-down"
-                    duration={600}
-                    timingFunction="ease"
+          {/* Vehicle Grid */}
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
+            {filteredVehicles.map((vehicle) => (
+              <Card
+                key={vehicle.id}
+                withBorder
+                radius="md"
+                shadow="sm"
+                style={{ minWidth: 0 }}
+              >
+                <Card.Section
+                  p="md"
+                  bg="linear-gradient(135deg, #228be6 0%, #15aabf 100%)"
+                  style={{
+                    borderTopLeftRadius: "var(--mantine-radius-md)",
+                    borderTopRightRadius: "var(--mantine-radius-md)",
+                  }}
+                >
+                  <Group
+                    justify="space-between"
+                    align="flex-start"
+                    wrap="nowrap"
                   >
-                    {(styles) => (
-                      <Card
-                        withBorder
-                        radius="md"
+                    <Group gap="xs" wrap="nowrap">
+                      <ThemeIcon
+                        size={40}
+                        radius="xl"
+                        variant="light"
+                        color="white"
+                      >
+                        {getVehicleTypeIcon(vehicle.type)}
+                      </ThemeIcon>
+                      <Stack gap={0} style={{ minWidth: 0 }}>
+                        <Text fw={700} size="lg" c="white" truncate>
+                          {vehicle.make} {vehicle.model}
+                        </Text>
+                        <Text size="sm" c="white">
+                          {vehicle.year}
+                        </Text>
+                      </Stack>
+                    </Group>
+                    <Menu position="bottom-end">
+                      <Menu.Target>
+                        <ActionIcon variant="transparent" color="white">
+                          <IconDotsVertical size={20} />
+                        </ActionIcon>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        <Menu.Item
+                          leftSection={<IconEdit size={16} />}
+                          onClick={() => openEditVehicleModal(vehicle)}
+                        >
+                          Edit
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={<IconCheckupList size={16} />}
+                          onClick={() => handleServiceHistoryClick(vehicle)}
+                        >
+                          Service History
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={<IconWallet size={16} />}
+                          onClick={() => handleExpensesClick(vehicle)}
+                        >
+                          Expenses
+                        </Menu.Item>
+                        <Menu.Divider />
+                        <Menu.Item
+                          leftSection={<IconTrash size={16} />}
+                          color="red"
+                          onClick={() => openDeleteVehicleModal(vehicle)}
+                        >
+                          Delete
+                        </Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
+                  </Group>
+                </Card.Section>
+
+                <Card.Section p="md">
+                  <Stack gap="md">
+                    <Group gap="xs">
+                      <LicensePlate plate={vehicle.license_plate} />
+                    </Group>
+
+                    <Divider />
+
+                    <Stack gap="md">
+                      <Group gap="xs">
+                        <ThemeIcon size="md" variant="light" color="blue">
+                          <IconGauge size={16} />
+                        </ThemeIcon>
+                        <Text size="sm" fw={500}>
+                          Mileage
+                        </Text>
+                        <Text size="sm" c="dimmed" ml="auto">
+                          {vehicle.current_mileage.toLocaleString()} miles
+                        </Text>
+                      </Group>
+
+                      <Group gap="xs">
+                        <ThemeIcon size="md" variant="light" color="blue">
+                          <IconCalendar size={16} />
+                        </ThemeIcon>
+                        <Text size="sm" fw={500}>
+                          Last Service
+                        </Text>
+                        <Text size="sm" c="dimmed" ml="auto">
+                          {new Date(
+                            vehicle.last_service_date
+                          ).toLocaleDateString()}
+                        </Text>
+                      </Group>
+
+                      <Group gap="xs">
+                        <ThemeIcon size="md" variant="light" color="blue">
+                          <IconColorSwatch size={16} />
+                        </ThemeIcon>
+                        <Text size="sm" fw={500}>
+                          Color
+                        </Text>
+                        <Group gap="xs" ml="auto">
+                          <Text size="sm" c="dimmed">
+                            {vehicle.color}
+                          </Text>
+                          <div
+                            style={{
+                              width: 24,
+                              height: 16,
+                              borderRadius: "4px",
+                              backgroundColor: vehicle.color_hex,
+                              border: "1px solid #dee2e6",
+                              boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
+                            }}
+                          />
+                        </Group>
+                      </Group>
+                    </Stack>
+
+                    {vehicle.notes && (
+                      <>
+                        <Divider />
+                        <Group gap="xs">
+                          <ThemeIcon size="md" variant="light" color="blue">
+                            <IconNotes size={16} />
+                          </ThemeIcon>
+                          <Text size="sm" fw={500}>
+                            Notes
+                          </Text>
+                        </Group>
+                        <Paper withBorder p="xs" radius="sm" bg="gray.0">
+                          <Text
+                            size="sm"
+                            c="dimmed"
+                            style={{ fontStyle: "italic" }}
+                          >
+                            {vehicle.notes}
+                          </Text>
+                        </Paper>
+                      </>
+                    )}
+
+                    {/* Quick Actions */}
+                    <Divider />
+                    <Group gap="xs">
+                      <UnstyledButton
+                        onClick={() => handleServiceHistoryClick(vehicle)}
                         style={{
-                          ...styles,
-                          transitionDelay: `${index * 150}ms`,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                          padding: "0.5rem 0.75rem",
+                          borderRadius: "var(--mantine-radius-md)",
+                          backgroundColor: "var(--mantine-color-blue-0)",
+                          color: "var(--mantine-color-blue-7)",
+                          transition: "all 0.2s ease",
+                          border: "1px solid var(--mantine-color-blue-2)",
+                          flex: 1,
+                          justifyContent: "center",
+                          "&:hover": {
+                            backgroundColor: "var(--mantine-color-blue-1)",
+                            transform: "translateY(-1px)",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                          },
                         }}
                       >
-                        <Card.Section
-                          p="md"
-                          bg="linear-gradient(135deg, #228be6 0%, #15aabf 100%)"
-                          style={{
-                            borderTopLeftRadius: "var(--mantine-radius-md)",
-                            borderTopRightRadius: "var(--mantine-radius-md)",
-                          }}
-                        >
-                          <Group justify="space-between" align="flex-start">
-                            <Group gap="xs">
-                              {getVehicleTypeIcon(vehicle.type, 32)}
-                              <Stack gap={0}>
-                                <Text
-                                  fw={700}
-                                  size={
-                                    filteredVehicles.length === 1 ? "2xl" : "xl"
-                                  }
-                                  c="white"
-                                >
-                                  {vehicle.make} {vehicle.model}
-                                </Text>
-                                <Text size="sm" c="white" opacity={0.8}>
-                                  {vehicle.year}
-                                </Text>
-                              </Stack>
-                            </Group>
-                            <Menu position="bottom-end" shadow="md">
-                              <Menu.Target>
-                                <ActionIcon variant="subtle" color="white">
-                                  <IconDotsVertical size={20} />
-                                </ActionIcon>
-                              </Menu.Target>
-                              <Menu.Dropdown>
-                                <Menu.Item
-                                  leftSection={<IconEdit size={14} />}
-                                  onClick={() => openEditVehicleModal(vehicle)}
-                                >
-                                  Edit
-                                </Menu.Item>
-                                <Menu.Item
-                                  color="red"
-                                  leftSection={<IconTrash size={14} />}
-                                  onClick={() =>
-                                    openDeleteVehicleModal(vehicle)
-                                  }
-                                >
-                                  Delete
-                                </Menu.Item>
-                              </Menu.Dropdown>
-                            </Menu>
-                          </Group>
-                        </Card.Section>
-
-                        <Card.Section p="md">
-                          <Stack gap="md">
-                            <Group gap="xs">
-                              <LicensePlate plate={vehicle.license_plate} />
-                            </Group>
-
-                            <Divider />
-
-                            <Stack gap="md">
-                              <Group gap="xs">
-                                <ThemeIcon
-                                  size="md"
-                                  variant="light"
-                                  color="blue"
-                                >
-                                  <IconGauge size={16} />
-                                </ThemeIcon>
-                                <Text size="sm" fw={500}>
-                                  Mileage
-                                </Text>
-                                <Text size="sm" c="dimmed" ml="auto">
-                                  {vehicle.current_mileage.toLocaleString()}{" "}
-                                  miles
-                                </Text>
-                              </Group>
-
-                              <Group gap="xs">
-                                <ThemeIcon
-                                  size="md"
-                                  variant="light"
-                                  color="blue"
-                                >
-                                  <IconCalendar size={16} />
-                                </ThemeIcon>
-                                <Text size="sm" fw={500}>
-                                  Last Service
-                                </Text>
-                                <Text size="sm" c="dimmed" ml="auto">
-                                  {new Date(
-                                    vehicle.last_service_date
-                                  ).toLocaleDateString()}
-                                </Text>
-                              </Group>
-
-                              <Group gap="xs">
-                                <ThemeIcon
-                                  size="md"
-                                  variant="light"
-                                  color="blue"
-                                >
-                                  <IconColorSwatch size={16} />
-                                </ThemeIcon>
-                                <Text size="sm" fw={500}>
-                                  Color
-                                </Text>
-                                <Group gap="xs" ml="auto">
-                                  <Text size="sm" c="dimmed">
-                                    {vehicle.color}
-                                  </Text>
-                                  <div
-                                    style={{
-                                      width: 24,
-                                      height: 16,
-                                      borderRadius: "4px",
-                                      backgroundColor: vehicle.color_hex,
-                                      border: "1px solid #dee2e6",
-                                      boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
-                                    }}
-                                  />
-                                </Group>
-                              </Group>
-                            </Stack>
-
-                            {vehicle.notes && (
-                              <>
-                                <Divider />
-                                <Group gap="xs">
-                                  <ThemeIcon
-                                    size="md"
-                                    variant="light"
-                                    color="blue"
-                                  >
-                                    <IconNotes size={16} />
-                                  </ThemeIcon>
-                                  <Text size="sm" fw={500}>
-                                    Notes
-                                  </Text>
-                                </Group>
-                                <Paper
-                                  withBorder
-                                  p="xs"
-                                  radius="sm"
-                                  bg="gray.0"
-                                >
-                                  <Text
-                                    size="sm"
-                                    c="dimmed"
-                                    style={{ fontStyle: "italic" }}
-                                  >
-                                    {vehicle.notes}
-                                  </Text>
-                                </Paper>
-                              </>
-                            )}
-
-                            {/* Quick Actions */}
-                            <Divider />
-                            <Group gap="xs">
-                              <UnstyledButton
-                                onClick={() =>
-                                  handleServiceHistoryClick(vehicle)
-                                }
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "0.5rem",
-                                  padding: "0.5rem 0.75rem",
-                                  borderRadius: "var(--mantine-radius-md)",
-                                  backgroundColor:
-                                    "var(--mantine-color-blue-0)",
-                                  color: "var(--mantine-color-blue-7)",
-                                  transition: "all 0.2s ease",
-                                  border:
-                                    "1px solid var(--mantine-color-blue-2)",
-                                  flex: 1,
-                                  justifyContent: "center",
-                                  "&:hover": {
-                                    backgroundColor:
-                                      "var(--mantine-color-blue-1)",
-                                    transform: "translateY(-1px)",
-                                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                                  },
-                                }}
-                              >
-                                <ThemeIcon
-                                  size="sm"
-                                  variant="light"
-                                  color="blue"
-                                >
-                                  <IconTools size={16} />
-                                </ThemeIcon>
-                                <Text size="xs" fw={500}>
-                                  Maintenance History
-                                </Text>
-                              </UnstyledButton>
-                              <UnstyledButton
-                                onClick={() => handleExpensesClick(vehicle)}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "0.5rem",
-                                  padding: "0.5rem 0.75rem",
-                                  borderRadius: "var(--mantine-radius-md)",
-                                  backgroundColor:
-                                    "var(--mantine-color-green-0)",
-                                  color: "var(--mantine-color-green-7)",
-                                  transition: "all 0.2s ease",
-                                  border:
-                                    "1px solid var(--mantine-color-green-2)",
-                                  flex: 1,
-                                  justifyContent: "center",
-                                  "&:hover": {
-                                    backgroundColor:
-                                      "var(--mantine-color-green-1)",
-                                    transform: "translateY(-1px)",
-                                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                                  },
-                                }}
-                              >
-                                <ThemeIcon
-                                  size="sm"
-                                  variant="light"
-                                  color="green"
-                                >
-                                  <IconChartBar size={16} />
-                                </ThemeIcon>
-                                <Text size="xs" fw={500}>
-                                  Expenses
-                                </Text>
-                              </UnstyledButton>
-                            </Group>
-                          </Stack>
-                        </Card.Section>
-                      </Card>
-                    )}
-                  </Transition>
-                </Grid.Col>
-              );
-            })}
-          </Grid>
-        )}
-      </Stack>
+                        <ThemeIcon size="sm" variant="light" color="blue">
+                          <IconTools size={16} />
+                        </ThemeIcon>
+                        <Text size="xs" fw={500}>
+                          Maintenance History
+                        </Text>
+                      </UnstyledButton>
+                      <UnstyledButton
+                        onClick={() => handleExpensesClick(vehicle)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                          padding: "0.5rem 0.75rem",
+                          borderRadius: "var(--mantine-radius-md)",
+                          backgroundColor: "var(--mantine-color-green-0)",
+                          color: "var(--mantine-color-green-7)",
+                          transition: "all 0.2s ease",
+                          border: "1px solid var(--mantine-color-green-2)",
+                          flex: 1,
+                          justifyContent: "center",
+                          "&:hover": {
+                            backgroundColor: "var(--mantine-color-green-1)",
+                            transform: "translateY(-1px)",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                          },
+                        }}
+                      >
+                        <ThemeIcon size="sm" variant="light" color="green">
+                          <IconChartBar size={16} />
+                        </ThemeIcon>
+                        <Text size="xs" fw={500}>
+                          Expenses
+                        </Text>
+                      </UnstyledButton>
+                    </Group>
+                  </Stack>
+                </Card.Section>
+              </Card>
+            ))}
+          </SimpleGrid>
+        </Stack>
+      )}
 
       {/* Service History Modal */}
       <Modal
@@ -1567,150 +1638,6 @@ export default function GaragePage() {
               Cancel
             </Button>
             <Button onClick={handleEdit}>Save Changes</Button>
-          </Group>
-        </Stack>
-      </Modal>
-
-      {/* Add Vehicle Modal */}
-      <Modal
-        opened={addModalOpened}
-        onClose={closeAddModal}
-        title={
-          <Group gap="xs">
-            <ThemeIcon variant="light" color="blue" size="sm">
-              <IconPlus size={16} />
-            </ThemeIcon>
-            <Text fw={600} size="lg">
-              ADD NEW VEHICLE
-            </Text>
-          </Group>
-        }
-        size="lg"
-        padding="xl"
-      >
-        <Stack gap="xl">
-          <SimpleGrid cols={2} spacing="md">
-            <TextInput
-              label="Make"
-              placeholder="Enter vehicle make"
-              required
-              value={addForm.make}
-              onChange={(e) => setAddForm({ ...addForm, make: e.target.value })}
-            />
-            <TextInput
-              label="Model"
-              placeholder="Enter vehicle model"
-              required
-              value={addForm.model}
-              onChange={(e) =>
-                setAddForm({ ...addForm, model: e.target.value })
-              }
-            />
-            <NumberInput
-              label="Year"
-              placeholder="Enter vehicle year"
-              required
-              value={addForm.year}
-              onChange={(value) =>
-                setAddForm({ ...addForm, year: Number(value) })
-              }
-            />
-            <Select
-              label="Vehicle Type"
-              placeholder="Select vehicle type"
-              required
-              value={addForm.type}
-              onChange={(value) =>
-                setAddForm({ ...addForm, type: value as Vehicle["type"] })
-              }
-              data={[
-                { value: "car", label: "Car" },
-                { value: "motorcycle", label: "Motorcycle" },
-                { value: "truck", label: "Truck" },
-                { value: "van", label: "Van" },
-                { value: "other", label: "Other" },
-              ]}
-            />
-          </SimpleGrid>
-
-          <Group grow>
-            <TextInput
-              label="Color Name"
-              placeholder="e.g., Metallic Blue"
-              value={addForm.color}
-              onChange={(e) =>
-                setAddForm({ ...addForm, color: e.target.value })
-              }
-            />
-            <ColorInput
-              label="Color"
-              placeholder="Select color"
-              value={addForm.color_hex}
-              onChange={(value) => setAddForm({ ...addForm, color_hex: value })}
-              format="hex"
-              swatches={Object.keys(COLOR_MAP)}
-            />
-          </Group>
-
-          <SimpleGrid cols={2} spacing="md">
-            <NumberInput
-              label="Current Mileage"
-              placeholder="Enter current mileage"
-              value={addForm.current_mileage}
-              onChange={(value) =>
-                setAddForm({ ...addForm, current_mileage: Number(value) })
-              }
-            />
-            <DateInput
-              label="Purchase Date"
-              placeholder="Select purchase date"
-              value={
-                addForm.purchase_date
-                  ? new Date(addForm.purchase_date)
-                  : undefined
-              }
-              onChange={(value) =>
-                setAddForm({ ...addForm, purchase_date: value?.toISOString() })
-              }
-            />
-            <NumberInput
-              label="Purchase Price"
-              placeholder="Enter purchase price"
-              value={addForm.purchase_price}
-              onChange={(value) =>
-                setAddForm({ ...addForm, purchase_price: Number(value) })
-              }
-            />
-            <DateInput
-              label="Last Service Date"
-              placeholder="Select last service date"
-              value={
-                addForm.last_service_date
-                  ? new Date(addForm.last_service_date)
-                  : undefined
-              }
-              onChange={(value) =>
-                setAddForm({
-                  ...addForm,
-                  last_service_date: value?.toISOString(),
-                })
-              }
-            />
-          </SimpleGrid>
-
-          <Textarea
-            label="Notes"
-            placeholder="Enter any additional notes"
-            value={addForm.notes}
-            onChange={(e) => setAddForm({ ...addForm, notes: e.target.value })}
-            minRows={3}
-          />
-
-          <Group justify="flex-end" mt="md">
-            <Button variant="light" onClick={closeAddModal}>
-              Cancel
-            </Button>
-            <Button onClick={handleAdd}>Add Vehicle</Button>
           </Group>
         </Stack>
       </Modal>
