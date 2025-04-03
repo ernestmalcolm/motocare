@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🏍️ MotoCare - Vehicle Maintenance Management Platform
 
-## Getting Started
+<div align="center">
+  
+  [![Next.js](https://img.shields.io/badge/Next.js-15.0-black?logo=next.js)](https://nextjs.org/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
+  [![Mantine](https://img.shields.io/badge/Mantine-7.0-228be6?logo=react)](https://mantine.dev/)
+  [![Tailwind CSS](https://img.shields.io/badge/Tailwind-2.2-38b2ac?logo=tailwind-css)](https://tailwindcss.com/)
+  [![Framer Motion](https://img.shields.io/badge/Framer%20Motion-12.6-black?logo=framer)](https://www.framer.com/motion/)
+  [![Supabase](https://img.shields.io/badge/Supabase-2.49-3ECF8E?logo=supabase)](https://supabase.com/)
+  [![React](https://img.shields.io/badge/React-19.1-61DAFB?logo=react)](https://reactjs.org/)
 
-First, run the development server:
+A modern, full-stack vehicle maintenance management platform built with cutting-edge technologies.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+</div>
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🌟 Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🚗 Vehicle Management
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Comprehensive vehicle profile tracking
+- Service history management
+- Maintenance schedule monitoring
+- Document storage and organization
+- Multi-vehicle support
 
-## Learn More
+### 📱 User Experience
 
-To learn more about Next.js, take a look at the following resources:
+- Responsive, modern UI with dark/light mode
+- Interactive carousel of supported brands
+- Smooth animations and transitions
+- Intuitive navigation
+- Mobile-first design
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 🔒 Security & Authentication
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Secure user authentication
+- Role-based access control
+- Protected API routes
+- Environment variable protection
 
-## Deploy on Vercel
+## 🛠️ Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Frontend
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Next.js 15** - React framework with App Router and Turbopack
+- **React 19** - UI library
+- **TypeScript** - Type-safe JavaScript
+- **Mantine UI v7** - Modern React components
+  - @mantine/core
+  - @mantine/dates
+  - @mantine/form
+  - @mantine/hooks
+  - @mantine/notifications
+- **Tailwind CSS** - Utility-first CSS framework
+- **Framer Motion** - Smooth animations
+- **Tabler Icons** - Icon library
+- **Day.js** - Date manipulation
+
+### Backend & Database
+
+- **Supabase** - Backend as a Service
+  - Authentication
+  - Database
+  - Real-time subscriptions
+  - Storage
+- **Next.js API Routes** - Backend API
+
+### Development Tools
+
+- **ESLint** - Code linting
+- **Prettier** - Code formatting
+- **TypeScript** - Type checking
+- **Git** - Version control
+- **Turbopack** - Fast development server
