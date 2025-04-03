@@ -16,7 +16,6 @@ export type Database = {
           model: string;
           year: number;
           license_plate: string;
-          vin?: string;
           image_url?: string;
           created_at: string;
           updated_at: string;

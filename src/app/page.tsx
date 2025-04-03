@@ -161,7 +161,6 @@ const carTips = [
   "Take pictures of your car regularly for insurance records.",
   "Review your vehicle registration and renewals before they expire.",
   "Always carry a spare tire and tools for emergencies.",
-  "Stay on top of recalls – check your VIN occasionally for safety updates.",
   "Avoid potholes when possible – they can cause costly suspension damage.",
   "Warm up your engine for a minute before driving off (especially in cold weather).",
   "Keep your car interior clean – it improves resale value and driving comfort.",

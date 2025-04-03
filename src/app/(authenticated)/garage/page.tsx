@@ -77,7 +77,6 @@ interface Vehicle {
   model: string;
   year: number;
   type: "car" | "motorcycle" | "truck" | "van" | "other";
-  vin: string;
   license_plate: string;
   color: string; // Human-readable color name
   color_hex: string; // Hex color code
@@ -412,7 +411,6 @@ export default function GaragePage() {
           model: editForm.model,
           year: editForm.year,
           type: editForm.type,
-          vin: editForm.vin,
           license_plate: editForm.license_plate,
           color: editForm.color,
           color_hex: editForm.color_hex,
@@ -489,7 +487,6 @@ export default function GaragePage() {
       model: vehicle.model,
       year: vehicle.year,
       type: vehicle.type,
-      vin: vehicle.vin,
       license_plate: vehicle.license_plate,
       color: vehicle.color,
       color_hex: vehicle.color_hex || vehicle.color_hex,
@@ -606,7 +603,6 @@ export default function GaragePage() {
       vehicle.make.toLowerCase().includes(searchLower) ||
       vehicle.model.toLowerCase().includes(searchLower) ||
       vehicle.license_plate.toLowerCase().includes(searchLower) ||
-      vehicle.vin.toLowerCase().includes(searchLower) ||
       vehicle.color.toLowerCase().includes(searchLower) ||
       vehicle.year.toString().includes(searchLower);
 
@@ -1127,27 +1123,6 @@ export default function GaragePage() {
                                   />
                                 </Group>
                               </Group>
-
-                              <Group gap="xs">
-                                <ThemeIcon
-                                  size="md"
-                                  variant="light"
-                                  color="blue"
-                                >
-                                  <IconCheckupList size={16} />
-                                </ThemeIcon>
-                                <Text size="sm" fw={500}>
-                                  VIN
-                                </Text>
-                                <Text
-                                  size="sm"
-                                  c="dimmed"
-                                  ml="auto"
-                                  style={{ fontFamily: "monospace" }}
-                                >
-                                  {vehicle.vin}
-                                </Text>
-                              </Group>
                             </Stack>
 
                             {vehicle.notes && (
@@ -1528,14 +1503,6 @@ export default function GaragePage() {
               ]}
             />
             <TextInput
-              label="VIN"
-              placeholder="Enter vehicle VIN"
-              value={editForm.vin}
-              onChange={(e) =>
-                setEditForm({ ...editForm, vin: e.target.value })
-              }
-            />
-            <TextInput
               label="License Plate"
               placeholder="Enter license plate"
               value={editForm.license_plate}
@@ -1663,21 +1630,6 @@ export default function GaragePage() {
                 { value: "van", label: "Van" },
                 { value: "other", label: "Other" },
               ]}
-            />
-            <TextInput
-              label="VIN"
-              placeholder="Enter vehicle VIN"
-              value={addForm.vin}
-              onChange={(e) => setAddForm({ ...addForm, vin: e.target.value })}
-            />
-            <TextInput
-              label="License Plate"
-              placeholder="Enter license plate"
-              required
-              value={addForm.license_plate}
-              onChange={(e) =>
-                setAddForm({ ...addForm, license_plate: e.target.value })
-              }
             />
           </SimpleGrid>
 
