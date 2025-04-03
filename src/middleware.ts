@@ -1,10 +1,53 @@
-import { type NextRequest } from "next/server";
-import { updateSession } from "@/utils/supabase/middleware";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  const response = await updateSession(request);
-  const { pathname } = request.nextUrl;
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+            path: "/",
+            sameSite: "lax",
+            secure: process.env.NODE_ENV === "production",
+            httpOnly: true,
+            maxAge: 60 * 60 * 24 * 7, // 1 week
+          });
+        },
+        remove(name: string, options: CookieOptions) {
+          response.cookies.set({
+            name,
+            value: "",
+            ...options,
+            path: "/",
+            sameSite: "lax",
+            secure: process.env.NODE_ENV === "production",
+            httpOnly: true,
+            maxAge: 0,
+          });
+        },
+      },
+    }
+  );
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
   // Define public routes that don't require authentication
   const publicRoutes = [
@@ -13,21 +56,17 @@ export async function middleware(request: NextRequest) {
     "/auth/signup",
     "/auth/forgot-password",
   ];
-  const isPublicRoute = publicRoutes.includes(pathname);
+  const isPublicRoute = publicRoutes.includes(request.nextUrl.pathname);
 
   // Define static file patterns
   const isStaticFile =
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon.ico") ||
-    pathname.startsWith("/car-brands") ||
-    pathname.endsWith(".js") ||
-    pathname.endsWith(".css") ||
-    pathname.endsWith(".map") ||
-    pathname.endsWith(".svg");
-
-  // Check for auth token using a simple cookie name
-  const authToken = request.cookies.get("motocare-auth-token")?.value;
-  const isAuthenticated = !!authToken;
+    request.nextUrl.pathname.startsWith("/_next") ||
+    request.nextUrl.pathname.startsWith("/favicon.ico") ||
+    request.nextUrl.pathname.startsWith("/car-brands") ||
+    request.nextUrl.pathname.endsWith(".js") ||
+    request.nextUrl.pathname.endsWith(".css") ||
+    request.nextUrl.pathname.endsWith(".map") ||
+    request.nextUrl.pathname.endsWith(".svg");
 
   // Allow access to public routes and static files
   if (isPublicRoute || isStaticFile) {
@@ -35,12 +74,12 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect authenticated users away from auth pages
-  if (isAuthenticated && pathname.startsWith("/auth/")) {
+  if (session && request.nextUrl.pathname.startsWith("/auth/")) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // Redirect unauthenticated users from protected pages
-  if (!isAuthenticated) {
+  if (!session) {
     return NextResponse.redirect(new URL("/auth/signin", request.url));
   }
 

@@ -40,7 +40,7 @@ import {
   IconWallet,
   IconChevronDown,
 } from "@tabler/icons-react";
-import { createClient } from "@/utils/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 import { notifications } from "@mantine/notifications";
 
@@ -68,7 +68,6 @@ export default function AuthenticatedLayout({
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
-  const supabase = createClient();
 
   useEffect(() => {
     const getUser = async () => {
@@ -120,38 +119,12 @@ export default function AuthenticatedLayout({
   }, []);
 
   const handleSignOut = async () => {
-    try {
-      // Sign out from Supabase
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-
-      // Clear all localStorage items
-      localStorage.clear();
-
-      // Clear all sessionStorage items
-      sessionStorage.clear();
-
-      // Clear the auth token cookie with the simple name
-      document.cookie =
-        "motocare-auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-
-      // Show success notification
-      notifications.show({
-        title: "Success",
-        message: "You have been signed out successfully",
-        color: "green",
-      });
-
-      // Force a hard refresh to ensure all state is cleared and redirect to sign-in
-      window.location.href = "/auth/signin";
-    } catch (error) {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
       console.error("Error signing out:", error);
-      notifications.show({
-        title: "Error",
-        message: "Failed to sign out. Please try again.",
-        color: "red",
-      });
+      return;
     }
+    router.push("/auth/signin");
   };
 
   return (

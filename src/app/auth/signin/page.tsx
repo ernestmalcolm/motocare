@@ -20,9 +20,10 @@ import {
 } from "@mantine/core";
 import { IconCar, IconLock, IconMail } from "@tabler/icons-react";
 import Link from "next/link";
-import { createClient } from "@/utils/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
+import { FormEvent } from "react";
 
 const welcomeMessages = [
   "Log in. Take control. Drive smarter. 🔐🚗",
@@ -37,8 +38,8 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [welcomeMessage, setWelcomeMessage] = useState(welcomeMessages[0]);
+  const [error, setError] = useState("");
   const router = useRouter();
-  const supabase = createClient();
 
   useEffect(() => {
     // Set random welcome message only on client-side
@@ -47,7 +48,7 @@ export default function SignInPage() {
     );
   }, []);
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
@@ -60,32 +61,20 @@ export default function SignInPage() {
       if (error) throw error;
 
       if (data.session) {
-        // Store the session in localStorage for Supabase client to use for data fetching
-        localStorage.setItem(
-          "sb-trtlsmrbrrytlgrdptrf-auth-token",
-          JSON.stringify(data.session)
-        );
-
-        // Set the auth token cookie for middleware route protection
-        document.cookie = `motocare-auth-token=${data.session.access_token}; path=/;`;
-
-        // Show success notification
         notifications.show({
-          title: "Success",
-          message: "Welcome back! Redirecting to dashboard...",
+          title: "Success!",
+          message: "You have been signed in successfully.",
           color: "green",
         });
 
-        // Force a hard refresh to ensure middleware picks up the new session
+        // Force a hard refresh to ensure cookies are set
         window.location.href = "/dashboard";
-      } else {
-        throw new Error("Failed to establish session");
       }
-    } catch (error: any) {
-      console.error("Error signing in:", error);
+    } catch (error) {
+      console.error("Error:", error);
       notifications.show({
         title: "Error",
-        message: error.message || "Failed to sign in",
+        message: "Failed to sign in. Please check your credentials.",
         color: "red",
       });
     } finally {
@@ -150,7 +139,7 @@ export default function SignInPage() {
                 </Text>
               </motion.div>
 
-              <form onSubmit={handleSignIn}>
+              <form onSubmit={handleSubmit}>
                 <Stack gap="md">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}

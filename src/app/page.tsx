@@ -188,18 +188,50 @@ export default function LandingPage() {
   const [pricing, setPricing] = useState("monthly");
   const currentTipIndex = useShuffleTips();
 
+  useEffect(() => {
+    const sections = document.querySelectorAll("[id]");
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute("id");
+            if (id) {
+              window.history.replaceState(null, "", `#${id}`);
+            }
+          }
+        });
+      },
+      {
+        rootMargin: "-50% 0px -50% 0px", // Trigger when section is in middle of viewport
+        threshold: 0,
+      }
+    );
+
+    sections.forEach((section) => {
+      observer.observe(section);
+    });
+
+    return () => {
+      sections.forEach((section) => {
+        observer.unobserve(section);
+      });
+    };
+  }, []);
+
   return (
     <Box>
       <LandingNavbar />
 
       {/* Hero Section */}
       <Box
-        h="100vh"
+        id="home"
+        h={{ base: "100vh", md: "100vh" }}
+        pt={{ base: rem(100), md: rem(80) }}
+        pb={{ base: rem(60), md: rem(0) }}
         style={{
-          position: "relative",
           background: "linear-gradient(135deg, #f6f8fc 0%, #e9f0f7 100%)",
           overflow: "hidden",
-          paddingTop: rem(80),
           display: "flex",
           alignItems: "center",
         }}
@@ -216,9 +248,9 @@ export default function LandingPage() {
           }}
         />
         <Container size="lg" style={{ flex: 1 }}>
-          <Grid h="100%" align="center">
+          <Grid h="100%" align="center" gutter="xl">
             <Grid.Col span={{ base: 12, md: 6 }}>
-              <Stack gap="xl">
+              <Stack gap="lg">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -235,8 +267,14 @@ export default function LandingPage() {
                   </Badge>
                   <Title
                     order={1}
-                    size={rem(64)}
-                    style={{ lineHeight: 1.2 }}
+                    size="xl"
+                    style={{
+                      lineHeight: 1.2,
+                      fontSize: rem(36),
+                      "@media (minWidth: 768px)": {
+                        fontSize: rem(64),
+                      },
+                    }}
                     mb="md"
                   >
                     Take Control of Your{" "}
@@ -244,13 +282,27 @@ export default function LandingPage() {
                       component="span"
                       variant="gradient"
                       gradient={{ from: "blue", to: "cyan" }}
-                      style={{ fontWeight: 800 }}
-                      size={rem(64)}
+                      style={{
+                        fontWeight: 800,
+                        fontSize: rem(36),
+                        "@media (minWidth: 768px)": {
+                          fontSize: rem(64),
+                        },
+                      }}
                     >
                       Vehicle Care
                     </Text>
                   </Title>
-                  <Text size="xl" c="dimmed" maw={500}>
+                  <Text
+                    size="md"
+                    c="dimmed"
+                    maw={500}
+                    style={{
+                      "@media (minWidth: 768px)": {
+                        fontSize: rem(18),
+                      },
+                    }}
+                  >
                     Streamline your vehicle maintenance, track expenses, and
                     never miss a service with our comprehensive management
                     platform.
@@ -263,7 +315,7 @@ export default function LandingPage() {
                   transition={{ duration: 0.8, delay: 0.2 }}
                   viewport={{ margin: "-100px" }}
                 >
-                  <Group gap="md">
+                  <Group gap="md" wrap="wrap">
                     <Button
                       size="lg"
                       component={Link}
@@ -306,7 +358,7 @@ export default function LandingPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.4 }}
                 >
-                  <Group gap="xl">
+                  <Group gap="xl" wrap="wrap">
                     {benefits.map((benefit) => (
                       <Group key={benefit.title} gap="xs">
                         <ThemeIcon
@@ -330,46 +382,56 @@ export default function LandingPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.6 }}
                 >
-                  <Group gap="md" align="center">
-                    <IconBulb
-                      size={40}
-                      style={{
-                        color: "#fbbf24",
-                        strokeWidth: 1.5,
-                        stroke: "currentColor",
-                      }}
-                    />
-                    <Box style={{ flex: 1 }}>
-                      <AnimatePresence mode="wait">
-                        <motion.div
-                          key={currentTipIndex}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.5 }}
-                        >
-                          <Text
-                            size="lg"
-                            style={{
-                              lineHeight: 1.5,
-                              background:
-                                "linear-gradient(135deg, #228be6 0%, #15aabf 100%)",
-                              WebkitBackgroundClip: "text",
-                              WebkitTextFillColor: "transparent",
-                              fontWeight: 500,
-                            }}
-                          >
-                            {carTips[currentTipIndex]}
-                          </Text>
-                        </motion.div>
-                      </AnimatePresence>
+                  <Stack gap="xl" mt="xl">
+                    <Box>
+                      <Group gap="xl" align="center" wrap="nowrap">
+                        <IconBulb
+                          size={40}
+                          style={{
+                            color: "#fbbf24",
+                            strokeWidth: 1.5,
+                            stroke: "currentColor",
+                          }}
+                        />
+                        <Box style={{ flex: 1 }}>
+                          <AnimatePresence mode="wait">
+                            <motion.div
+                              key={currentTipIndex}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -20 }}
+                              transition={{ duration: 0.5 }}
+                            >
+                              <Text
+                                size="sm"
+                                style={{
+                                  lineHeight: 1.5,
+                                  background:
+                                    "linear-gradient(135deg, #228be6 0%, #15aabf 100%)",
+                                  WebkitBackgroundClip: "text",
+                                  WebkitTextFillColor: "transparent",
+                                  fontWeight: 500,
+                                  "@media (minWidth: 768px)": {
+                                    fontSize: rem(16),
+                                  },
+                                }}
+                              >
+                                {carTips[currentTipIndex]}
+                              </Text>
+                            </motion.div>
+                          </AnimatePresence>
+                        </Box>
+                      </Group>
                     </Box>
-                  </Group>
+                  </Stack>
                 </motion.div>
               </Stack>
             </Grid.Col>
 
-            <Grid.Col span={{ base: 12, md: 6 }}>
+            <Grid.Col
+              span={{ base: 12, md: 6 }}
+              display={{ base: "none", md: "block" }}
+            >
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 whileInView={{ opacity: 1, scale: 1 }}
@@ -377,10 +439,9 @@ export default function LandingPage() {
                 viewport={{ margin: "-100px" }}
               >
                 <Box
+                  h={{ base: rem(300), md: rem(400) }}
                   style={{
                     position: "relative",
-                    height: "100%",
-                    minHeight: rem(400),
                     background:
                       "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 100%)",
                     borderRadius: rem(20),
@@ -610,7 +671,9 @@ export default function LandingPage() {
       </Box>
 
       {/* Car Brands Marquee */}
-      <CarBrandMarquee />
+      <Box id="brands">
+        <CarBrandMarquee />
+      </Box>
 
       {/* Features Section */}
       <Box id="features" py={rem(80)} bg="gray.0">
@@ -631,41 +694,9 @@ export default function LandingPage() {
               </Text>
             </motion.div>
 
-            <Box
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(12, 1fr)",
-                gridTemplateRows: "repeat(3, auto)",
-                gap: "16px",
-              }}
-            >
+            <Grid gutter="xl">
               {features.map((feature, index) => (
-                <Box
-                  key={feature.title}
-                  style={{
-                    gridColumn:
-                      index === 0
-                        ? "1 / 5" // Vehicle Management - tall left
-                        : index === 1
-                        ? "5 / 9" // Smart Reminders - top middle
-                        : index === 2
-                        ? "9 / 13" // Expense Tracking - top right
-                        : index === 3
-                        ? "5 / 9" // Maintenance Records - bottom middle
-                        : index === 4
-                        ? "9 / 13" // Health Analytics - bottom right
-                        : "1 / 13", // Service Scheduling - full width bottom
-                    gridRow:
-                      index === 0
-                        ? "1 / 3"
-                        : index === 5
-                        ? "3"
-                        : index < 3
-                        ? "1"
-                        : "2",
-                    height: "100%",
-                  }}
-                >
+                <Grid.Col key={feature.title} span={{ base: 12, sm: 6, md: 4 }}>
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -726,9 +757,9 @@ export default function LandingPage() {
                       </Stack>
                     </Card>
                   </motion.div>
-                </Box>
+                </Grid.Col>
               ))}
-            </Box>
+            </Grid>
           </Stack>
         </Container>
       </Box>
@@ -1149,6 +1180,7 @@ export default function LandingPage() {
 
       {/* CTA Section */}
       <Box
+        id="cta"
         py={rem(80)}
         style={{
           background: "linear-gradient(135deg, #f6f8fc 0%, #e9f0f7 100%)",

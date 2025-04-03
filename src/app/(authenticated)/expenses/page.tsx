@@ -56,7 +56,7 @@ import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/supabase";
 
 type Expense = Database["public"]["Tables"]["expenses"]["Row"];
-type Vehicle = Database["public"]["Tables"]["vehicles"]["Row"];
+type Vehicle = Database["public"]["Tables"]["cars"]["Row"];
 
 export default function Expenses() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -68,8 +68,14 @@ export default function Expenses() {
     "fuel" | "maintenance" | "insurance" | "taxes" | "accessories" | "other"
   >("fuel");
   const [formData, setFormData] = useState({
-    vehicle_id: "",
-    category: "fuel" as const,
+    car_id: "",
+    category: "fuel" as
+      | "fuel"
+      | "maintenance"
+      | "insurance"
+      | "taxes"
+      | "accessories"
+      | "other",
     date: new Date(),
     amount: 0,
     description: "",
@@ -121,7 +127,7 @@ export default function Expenses() {
 
       // Fetch vehicles for the current user
       const { data: vehiclesData, error: vehiclesError } = await supabase
-        .from("vehicles")
+        .from("cars")
         .select("*")
         .eq("user_id", session.user.id)
         .order("created_at", { ascending: false });
@@ -152,7 +158,7 @@ export default function Expenses() {
     try {
       const { error } = await supabase.from("expenses").insert([
         {
-          vehicle_id: formData.vehicle_id,
+          car_id: formData.car_id,
           category: formData.category,
           date: formData.date,
           amount: formData.amount,
@@ -174,7 +180,7 @@ export default function Expenses() {
 
   const resetForm = () => {
     setFormData({
-      vehicle_id: "",
+      car_id: "",
       category: "fuel",
       date: new Date(),
       amount: 0,
@@ -198,7 +204,7 @@ export default function Expenses() {
   const filteredExpenses = expenses
     .filter((expense) => {
       // Filter by vehicle
-      if (selectedVehicle && expense.vehicle_id !== selectedVehicle) {
+      if (selectedVehicle && expense.car_id !== selectedVehicle) {
         return false;
       }
 
@@ -223,12 +229,12 @@ export default function Expenses() {
         }
       }
 
-      // New filters
+      // Filter by search query
       if (searchQuery) {
         const searchLower = searchQuery.toLowerCase();
         return (
-          expense.description.toLowerCase().includes(searchLower) ||
-          expense.notes?.toLowerCase().includes(searchLower)
+          (expense.description?.toLowerCase().includes(searchLower) ?? false) ||
+          (expense.notes?.toLowerCase().includes(searchLower) ?? false)
         );
       }
 
@@ -351,7 +357,7 @@ export default function Expenses() {
         <Transition
           mounted={mounted}
           transition="slide-down"
-          duration={800}
+          duration={400}
           timingFunction="ease"
         >
           {(styles) => (
@@ -425,9 +431,8 @@ export default function Expenses() {
         <Transition
           mounted={mounted}
           transition="slide-down"
-          duration={600}
+          duration={400}
           timingFunction="ease"
-          delay={150}
         >
           {(styles) => (
             <Card withBorder radius="md" p="md" style={styles}>
@@ -447,7 +452,6 @@ export default function Expenses() {
                     ]}
                     leftSection={<IconCar size={16} />}
                     style={{ minWidth: 200 }}
-                    clearable="true"
                   />
                   <MultiSelect
                     label="Categories"
@@ -464,7 +468,6 @@ export default function Expenses() {
                     ]}
                     leftSection={<IconReceipt size={16} />}
                     style={{ minWidth: 200 }}
-                    clearable="true"
                   />
                   <DatePickerInput
                     type="range"
@@ -473,7 +476,6 @@ export default function Expenses() {
                     onChange={setDateRange}
                     leftSection={<IconCalendar size={16} />}
                     style={{ minWidth: 250 }}
-                    clearable="true"
                   />
                   <TextInput
                     label="Search"
@@ -482,7 +484,6 @@ export default function Expenses() {
                     onChange={(e) => setSearchQuery(e.currentTarget.value)}
                     leftSection={<IconSearch size={16} />}
                     style={{ minWidth: 200 }}
-                    clearable="true"
                   />
                   <Button
                     variant="light"
@@ -507,9 +508,8 @@ export default function Expenses() {
         <Transition
           mounted={mounted}
           transition="slide-down"
-          duration={600}
+          duration={400}
           timingFunction="ease"
-          delay={300}
         >
           {(styles) => (
             <Card withBorder radius="md" p="md" style={styles}>
@@ -537,9 +537,8 @@ export default function Expenses() {
                     <Transition
                       mounted={mounted}
                       transition="slide-down"
-                      duration={600}
+                      duration={400}
                       timingFunction="ease"
-                      delay={450}
                     >
                       {(styles) => (
                         <Card
@@ -578,9 +577,8 @@ export default function Expenses() {
                     <Transition
                       mounted={mounted}
                       transition="slide-down"
-                      duration={600}
+                      duration={400}
                       timingFunction="ease"
-                      delay={600}
                     >
                       {(styles) => (
                         <Card
@@ -636,9 +634,8 @@ export default function Expenses() {
                     <Transition
                       mounted={mounted}
                       transition="slide-down"
-                      duration={600}
+                      duration={400}
                       timingFunction="ease"
-                      delay={750}
                     >
                       {(styles) => (
                         <Card
@@ -698,9 +695,8 @@ export default function Expenses() {
               <Transition
                 mounted={mounted}
                 transition="slide-down"
-                duration={600}
+                duration={400}
                 timingFunction="ease"
-                delay={150 * (index + 1)}
               >
                 {(styles) => (
                   <Card
@@ -734,11 +730,17 @@ export default function Expenses() {
                             leftSection={<IconEdit size={14} />}
                             onClick={() => {
                               setFormData({
-                                vehicle_id: expense.vehicle_id,
-                                category: expense.category,
+                                car_id: expense.car_id,
+                                category: expense.category as
+                                  | "fuel"
+                                  | "maintenance"
+                                  | "insurance"
+                                  | "taxes"
+                                  | "accessories"
+                                  | "other",
                                 date: new Date(expense.date),
                                 amount: expense.amount,
-                                description: expense.description,
+                                description: expense.description || "",
                                 receipt_url: expense.receipt_url || "",
                                 notes: expense.notes || "",
                               });
@@ -760,8 +762,8 @@ export default function Expenses() {
                     <Text size="xl" fw={700} mb="xs">
                       TZS {expense.amount.toLocaleString()}
                     </Text>
-                    <Text size="sm" c="dimmed" mb="md">
-                      {expense.description}
+                    <Text size="sm" c="dimmed">
+                      {expense.description ?? "No description"}
                     </Text>
                     <Group gap="xs" wrap="wrap">
                       <Badge
@@ -769,14 +771,8 @@ export default function Expenses() {
                         color="blue"
                         leftSection={<IconCar size={12} />}
                       >
-                        {
-                          vehicles.find((v) => v.id === expense.vehicle_id)
-                            ?.make
-                        }{" "}
-                        {
-                          vehicles.find((v) => v.id === expense.vehicle_id)
-                            ?.model
-                        }
+                        {vehicles.find((v) => v.id === expense.car_id)?.make}{" "}
+                        {vehicles.find((v) => v.id === expense.car_id)?.model}
                       </Badge>
                       <Badge
                         variant="light"
@@ -810,7 +806,7 @@ export default function Expenses() {
                 {getCategoryIcon(formData.category)}
               </ThemeIcon>
               <Text fw={500}>
-                {formData.vehicle_id ? "Edit Expense" : "Add New Expense"}
+                {formData.car_id ? "Edit Expense" : "Add New Expense"}
               </Text>
             </Group>
           }
@@ -833,9 +829,9 @@ export default function Expenses() {
                   <Select
                     label="Select Vehicle"
                     placeholder="Choose a vehicle"
-                    value={formData.vehicle_id}
+                    value={formData.car_id}
                     onChange={(value) =>
-                      setFormData({ ...formData, vehicle_id: value || "" })
+                      setFormData({ ...formData, car_id: value || "" })
                     }
                     data={vehicles.map((v) => ({
                       value: v.id,
@@ -919,11 +915,11 @@ export default function Expenses() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        description: e.currentTarget.value,
+                        description: e.target.value,
                       })
                     }
-                    required
-                    leftSection={<IconReceipt2 size={16} />}
+                    leftSection={<IconNotes size={16} />}
+                    style={{ minWidth: 200 }}
                   />
                   <TextInput
                     label="Receipt URL"
@@ -968,7 +964,7 @@ export default function Expenses() {
                   variant="gradient"
                   gradient={{ from: "blue", to: "cyan", deg: 45 }}
                 >
-                  {formData.vehicle_id ? "Update Expense" : "Add Expense"}
+                  {formData.car_id ? "Update Expense" : "Add Expense"}
                 </Button>
               </Group>
             </Stack>
