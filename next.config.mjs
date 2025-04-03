@@ -5,6 +5,10 @@ const nextConfig = {
   experimental: {
     serverActions: true,
   },
+  output: "standalone",
+  webpack: (config, { isServer }) => {
+    return config;
+  },
 };
 
 export default nextConfig;
