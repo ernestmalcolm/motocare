@@ -590,9 +590,9 @@ export default function LandingPage() {
                 viewport={{ margin: "-100px" }}
               >
                 <Box
+                  h={{ base: 500, md: 450 }}
                   style={{
                     position: "relative",
-                    height: rem(400),
                     background:
                       "linear-gradient(135deg, #228be6 0%, #15aabf 100%)",
                     borderRadius: rem(20),
@@ -611,14 +611,14 @@ export default function LandingPage() {
                     }}
                   />
                   <Stack
-                    p="xl"
+                    p={{ base: "md", md: "xs" }}
                     h="100%"
                     justify="center"
                     style={{ position: "relative", zIndex: 1 }}
                   >
                     <Paper
                       radius="md"
-                      p="md"
+                      p={{ base: "md", md: "xs" }}
                       style={{
                         background: "rgba(255, 255, 255, 0.1)",
                         backdropFilter: "blur(10px)",
@@ -641,11 +641,11 @@ export default function LandingPage() {
 
                     <Paper
                       radius="md"
-                      p="md"
+                      p={{ base: "md", md: "xs" }}
+                      mt={{ base: 30, md: 15 }}
                       style={{
                         background: "rgba(255, 255, 255, 0.1)",
                         backdropFilter: "blur(10px)",
-                        marginTop: rem(20),
                       }}
                     >
                       <Stack gap="md">

@@ -31,6 +31,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
+import { FormEvent } from "react";
 
 const welcomeMessages = [
   "Start here. Your car's future self will thank you. 🛠️📅",
@@ -104,6 +105,8 @@ export default function SignUpPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     setLoading(true);
 
     try {
@@ -112,32 +115,27 @@ export default function SignUpPage() {
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            full_name: fullName.trim(),
+            email_verified: false,
+            phone_verified: false,
+          },
         },
       });
 
       if (error) throw error;
 
-      if (data.session) {
-        // Store the session in localStorage for Supabase client to use for data fetching
-        localStorage.setItem(
-          "sb-trtlsmrbrrytlgrdptrf-auth-token",
-          JSON.stringify(data.session)
-        );
-
-        // Set the auth token cookie for middleware route protection
-        document.cookie = `motocare-auth-token=${data.session.access_token}; path=/;`;
-
-        // Show success notification
+      if (data.user) {
         notifications.show({
-          title: "Success",
-          message: "Welcome to MotoCare! Redirecting to dashboard...",
+          title: "Success!",
+          message: "Please check your email to confirm your account.",
           color: "green",
         });
 
-        // Force a hard refresh to ensure middleware picks up the new session
-        window.location.href = "/dashboard";
+        // Redirect to a confirmation page or show a message
+        router.push("/auth/confirmation");
       } else {
-        throw new Error("Failed to establish session");
+        throw new Error("Failed to create account");
       }
     } catch (error: any) {
       console.error("Error signing up:", error);
