@@ -730,7 +730,7 @@ export default function Reminders() {
         >
           {(styles) => (
             <Group justify="space-between" style={styles}>
-              <Group gap="md">
+              <Stack gap={0}>
                 <Transition
                   mounted={mounted}
                   transition="slide-down"
@@ -738,7 +738,7 @@ export default function Reminders() {
                 >
                   {(styles) => (
                     <div style={styles}>
-                      <Group gap="xs">
+                      <Group gap="xs" wrap="nowrap">
                         <ThemeIcon
                           size={48}
                           radius="xl"
@@ -747,17 +747,15 @@ export default function Reminders() {
                         >
                           <IconBell size={28} />
                         </ThemeIcon>
-                        <Stack gap={0}>
-                          <Title order={1}>Reminders</Title>
-                          <Text c="dimmed" size="lg">
-                            {welcomeMessage}
-                          </Text>
-                        </Stack>
+                        <Title order={1}>Reminders</Title>
                       </Group>
+                      <Text c="dimmed" size="lg" mt={4}>
+                        {welcomeMessage}
+                      </Text>
                     </div>
                   )}
                 </Transition>
-              </Group>
+              </Stack>
               <Button
                 leftSection={<IconPlus size={20} />}
                 variant="gradient"

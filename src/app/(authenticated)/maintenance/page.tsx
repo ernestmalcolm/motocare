@@ -28,6 +28,7 @@ import {
   TextInput as MantineTextInput,
   ComboboxItem,
   Transition,
+  ScrollArea,
 } from "@mantine/core";
 import { DateInput, DatePickerInput } from "@mantine/dates";
 import {
@@ -506,42 +507,32 @@ export default function MaintenancePage() {
         >
           {(styles) => (
             <Group justify="space-between" style={styles}>
-              <Group gap="md">
-                <ThemeIcon
-                  size={48}
-                  radius="xl"
-                  variant="gradient"
-                  gradient={{ from: "blue", to: "cyan", deg: 45 }}
+              <Stack gap={0}>
+                <Transition
+                  mounted={mounted}
+                  transition="slide-down"
+                  duration={600}
                 >
-                  <IconTools size={28} />
-                </ThemeIcon>
-                <Stack gap={0}>
-                  <Transition
-                    mounted={mounted}
-                    transition="slide-down"
-                    duration={600}
-                  >
-                    {(styles) => (
-                      <div style={styles}>
-                        <Group gap="xs" wrap="nowrap">
-                          <ThemeIcon
-                            size={48}
-                            radius="xl"
-                            variant="gradient"
-                            gradient={{ from: "blue", to: "cyan", deg: 45 }}
-                          >
-                            <IconTools size={28} />
-                          </ThemeIcon>
-                          <Title order={1}>Maintenance</Title>
-                        </Group>
-                        <Text c="dimmed" size="lg" mt={4}>
-                          {welcomeMessage}
-                        </Text>
-                      </div>
-                    )}
-                  </Transition>
-                </Stack>
-              </Group>
+                  {(styles) => (
+                    <div style={styles}>
+                      <Group gap="xs" wrap="nowrap">
+                        <ThemeIcon
+                          size={48}
+                          radius="xl"
+                          variant="gradient"
+                          gradient={{ from: "blue", to: "cyan", deg: 45 }}
+                        >
+                          <IconTools size={28} />
+                        </ThemeIcon>
+                        <Title order={1}>Maintenance</Title>
+                      </Group>
+                      <Text c="dimmed" size="lg" mt={4}>
+                        {welcomeMessage}
+                      </Text>
+                    </div>
+                  )}
+                </Transition>
+              </Stack>
               <Button
                 leftSection={<IconPlus size={20} />}
                 onClick={openAddModal}
@@ -875,202 +866,208 @@ export default function MaintenancePage() {
                   </Stack>
                 </Card>
               ) : (
-                <Table striped highlightOnHover>
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>Vehicle</Table.Th>
-                      <Table.Th>Type</Table.Th>
-                      <Table.Th>
-                        <Group gap="xs" wrap="nowrap">
-                          <Text>Date</Text>
-                          {sortField === "date" && (
-                            <ThemeIcon size="xs" variant="light" color="blue">
-                              {sortDirection === "asc" ? (
-                                <IconSortAscending size={12} />
-                              ) : (
-                                <IconSortDescending size={12} />
-                              )}
-                            </ThemeIcon>
-                          )}
-                        </Group>
-                      </Table.Th>
-                      <Table.Th>
-                        <Group gap="xs" wrap="nowrap">
-                          <Text>Mileage</Text>
-                          {sortField === "mileage" && (
-                            <ThemeIcon size="xs" variant="light" color="blue">
-                              {sortDirection === "asc" ? (
-                                <IconSortAscending size={12} />
-                              ) : (
-                                <IconSortDescending size={12} />
-                              )}
-                            </ThemeIcon>
-                          )}
-                        </Group>
-                      </Table.Th>
-                      <Table.Th>
-                        <Group gap="xs" wrap="nowrap">
-                          <Text>Cost</Text>
-                          {sortField === "cost" && (
-                            <ThemeIcon size="xs" variant="light" color="blue">
-                              {sortDirection === "asc" ? (
-                                <IconSortAscending size={12} />
-                              ) : (
-                                <IconSortDescending size={12} />
-                              )}
-                            </ThemeIcon>
-                          )}
-                        </Group>
-                      </Table.Th>
-                      <Table.Th>Provider</Table.Th>
-                      <Table.Th></Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>
-                    {filteredRecords.map((record, index) => (
-                      <Transition
-                        key={record.id}
-                        mounted={mounted}
-                        transition="slide-down"
-                        duration={600}
-                        timingFunction="ease"
-                      >
-                        {(styles) => (
-                          <Table.Tr
-                            style={{
-                              ...styles,
-                              transitionDelay: `${150 * (index + 1)}ms`,
-                            }}
-                          >
-                            <Table.Td>
-                              <Group gap="xs">
-                                <ThemeIcon
-                                  size="sm"
-                                  variant="light"
-                                  color="blue"
-                                >
-                                  <IconCar size={14} />
-                                </ThemeIcon>
-                                <Stack gap={0}>
-                                  <Text fw={500}>
-                                    {record.vehicle?.make}{" "}
-                                    {record.vehicle?.model}
-                                  </Text>
-                                  <Text size="sm" c="dimmed">
-                                    {record.vehicle?.year}
-                                  </Text>
-                                </Stack>
-                              </Group>
-                            </Table.Td>
-                            <Table.Td>
-                              <Badge
-                                variant="light"
-                                color={
-                                  record.type === "service"
-                                    ? "blue"
-                                    : record.type === "repair"
-                                    ? "red"
-                                    : "yellow"
-                                }
-                                leftSection={
-                                  record.type === "service" ? (
-                                    <IconStethoscope size={12} />
-                                  ) : record.type === "repair" ? (
-                                    <IconTool size={12} />
-                                  ) : (
-                                    <IconClipboardCheck size={12} />
-                                  )
-                                }
-                              >
-                                {record.type}
-                              </Badge>
-                            </Table.Td>
-                            <Table.Td>
-                              <Group gap="xs">
-                                <ThemeIcon
-                                  size="sm"
-                                  variant="light"
-                                  color="gray"
-                                >
-                                  <IconCalendar size={14} />
-                                </ThemeIcon>
-                                <Text>
-                                  {new Date(record.date).toLocaleDateString()}
-                                </Text>
-                              </Group>
-                            </Table.Td>
-                            <Table.Td>
-                              <Group gap="xs">
-                                <ThemeIcon
-                                  size="sm"
-                                  variant="light"
-                                  color="yellow"
-                                >
-                                  <IconGauge size={14} />
-                                </ThemeIcon>
-                                <Text>
-                                  {record.mileage.toLocaleString()} miles
-                                </Text>
-                              </Group>
-                            </Table.Td>
-                            <Table.Td>
-                              <Group gap="xs">
-                                <ThemeIcon
-                                  size="sm"
-                                  variant="light"
-                                  color="green"
-                                >
-                                  <IconCurrencyDollar size={14} />
-                                </ThemeIcon>
-                                <Text>TZS {record.cost.toLocaleString()}</Text>
-                              </Group>
-                            </Table.Td>
-                            <Table.Td>
-                              <Group gap="xs">
-                                <ThemeIcon
-                                  size="sm"
-                                  variant="light"
-                                  color="violet"
-                                >
-                                  <IconBuilding size={14} />
-                                </ThemeIcon>
-                                <Text>{record.service_provider}</Text>
-                              </Group>
-                            </Table.Td>
-                            <Table.Td>
-                              <Menu position="bottom-end" shadow="md">
-                                <Menu.Target>
-                                  <ActionIcon variant="subtle" color="gray">
-                                    <IconDotsVertical size={16} />
-                                  </ActionIcon>
-                                </Menu.Target>
-                                <Menu.Dropdown>
-                                  <Menu.Item
-                                    leftSection={<IconEdit size={14} />}
-                                    onClick={() => openEditRecordModal(record)}
+                <ScrollArea>
+                  <Table striped highlightOnHover>
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th>Vehicle</Table.Th>
+                        <Table.Th>Type</Table.Th>
+                        <Table.Th>
+                          <Group gap="xs" wrap="nowrap">
+                            <Text>Date</Text>
+                            {sortField === "date" && (
+                              <ThemeIcon size="xs" variant="light" color="blue">
+                                {sortDirection === "asc" ? (
+                                  <IconSortAscending size={12} />
+                                ) : (
+                                  <IconSortDescending size={12} />
+                                )}
+                              </ThemeIcon>
+                            )}
+                          </Group>
+                        </Table.Th>
+                        <Table.Th>
+                          <Group gap="xs" wrap="nowrap">
+                            <Text>Mileage</Text>
+                            {sortField === "mileage" && (
+                              <ThemeIcon size="xs" variant="light" color="blue">
+                                {sortDirection === "asc" ? (
+                                  <IconSortAscending size={12} />
+                                ) : (
+                                  <IconSortDescending size={12} />
+                                )}
+                              </ThemeIcon>
+                            )}
+                          </Group>
+                        </Table.Th>
+                        <Table.Th>
+                          <Group gap="xs" wrap="nowrap">
+                            <Text>Cost</Text>
+                            {sortField === "cost" && (
+                              <ThemeIcon size="xs" variant="light" color="blue">
+                                {sortDirection === "asc" ? (
+                                  <IconSortAscending size={12} />
+                                ) : (
+                                  <IconSortDescending size={12} />
+                                )}
+                              </ThemeIcon>
+                            )}
+                          </Group>
+                        </Table.Th>
+                        <Table.Th>Provider</Table.Th>
+                        <Table.Th></Table.Th>
+                      </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {filteredRecords.map((record, index) => (
+                        <Transition
+                          key={record.id}
+                          mounted={mounted}
+                          transition="slide-down"
+                          duration={600}
+                          timingFunction="ease"
+                        >
+                          {(styles) => (
+                            <Table.Tr
+                              style={{
+                                ...styles,
+                                transitionDelay: `${150 * (index + 1)}ms`,
+                              }}
+                            >
+                              <Table.Td>
+                                <Group gap="xs">
+                                  <ThemeIcon
+                                    size="sm"
+                                    variant="light"
                                     color="blue"
                                   >
-                                    Edit Record
-                                  </Menu.Item>
-                                  <Menu.Divider />
-                                  <Menu.Item
-                                    color="red"
-                                    leftSection={<IconTrash size={14} />}
-                                    onClick={() =>
-                                      openDeleteRecordModal(record)
-                                    }
+                                    <IconCar size={14} />
+                                  </ThemeIcon>
+                                  <Stack gap={0}>
+                                    <Text fw={500}>
+                                      {record.vehicle?.make}{" "}
+                                      {record.vehicle?.model}
+                                    </Text>
+                                    <Text size="sm" c="dimmed">
+                                      {record.vehicle?.year}
+                                    </Text>
+                                  </Stack>
+                                </Group>
+                              </Table.Td>
+                              <Table.Td>
+                                <Badge
+                                  variant="light"
+                                  color={
+                                    record.type === "service"
+                                      ? "blue"
+                                      : record.type === "repair"
+                                      ? "red"
+                                      : "yellow"
+                                  }
+                                  leftSection={
+                                    record.type === "service" ? (
+                                      <IconStethoscope size={12} />
+                                    ) : record.type === "repair" ? (
+                                      <IconTool size={12} />
+                                    ) : (
+                                      <IconClipboardCheck size={12} />
+                                    )
+                                  }
+                                >
+                                  {record.type}
+                                </Badge>
+                              </Table.Td>
+                              <Table.Td>
+                                <Group gap="xs">
+                                  <ThemeIcon
+                                    size="sm"
+                                    variant="light"
+                                    color="gray"
                                   >
-                                    Delete Record
-                                  </Menu.Item>
-                                </Menu.Dropdown>
-                              </Menu>
-                            </Table.Td>
-                          </Table.Tr>
-                        )}
-                      </Transition>
-                    ))}
-                  </Table.Tbody>
-                </Table>
+                                    <IconCalendar size={14} />
+                                  </ThemeIcon>
+                                  <Text>
+                                    {new Date(record.date).toLocaleDateString()}
+                                  </Text>
+                                </Group>
+                              </Table.Td>
+                              <Table.Td>
+                                <Group gap="xs">
+                                  <ThemeIcon
+                                    size="sm"
+                                    variant="light"
+                                    color="yellow"
+                                  >
+                                    <IconGauge size={14} />
+                                  </ThemeIcon>
+                                  <Text>
+                                    {record.mileage.toLocaleString()} miles
+                                  </Text>
+                                </Group>
+                              </Table.Td>
+                              <Table.Td>
+                                <Group gap="xs">
+                                  <ThemeIcon
+                                    size="sm"
+                                    variant="light"
+                                    color="green"
+                                  >
+                                    <IconCurrencyDollar size={14} />
+                                  </ThemeIcon>
+                                  <Text>
+                                    TZS {record.cost.toLocaleString()}
+                                  </Text>
+                                </Group>
+                              </Table.Td>
+                              <Table.Td>
+                                <Group gap="xs">
+                                  <ThemeIcon
+                                    size="sm"
+                                    variant="light"
+                                    color="violet"
+                                  >
+                                    <IconBuilding size={14} />
+                                  </ThemeIcon>
+                                  <Text>{record.service_provider}</Text>
+                                </Group>
+                              </Table.Td>
+                              <Table.Td>
+                                <Menu position="bottom-end" shadow="md">
+                                  <Menu.Target>
+                                    <ActionIcon variant="subtle" color="gray">
+                                      <IconDotsVertical size={16} />
+                                    </ActionIcon>
+                                  </Menu.Target>
+                                  <Menu.Dropdown>
+                                    <Menu.Item
+                                      leftSection={<IconEdit size={14} />}
+                                      onClick={() =>
+                                        openEditRecordModal(record)
+                                      }
+                                      color="blue"
+                                    >
+                                      Edit Record
+                                    </Menu.Item>
+                                    <Menu.Divider />
+                                    <Menu.Item
+                                      color="red"
+                                      leftSection={<IconTrash size={14} />}
+                                      onClick={() =>
+                                        openDeleteRecordModal(record)
+                                      }
+                                    >
+                                      Delete Record
+                                    </Menu.Item>
+                                  </Menu.Dropdown>
+                                </Menu>
+                              </Table.Td>
+                            </Table.Tr>
+                          )}
+                        </Transition>
+                      ))}
+                    </Table.Tbody>
+                  </Table>
+                </ScrollArea>
               )}
             </Card>
           )}
