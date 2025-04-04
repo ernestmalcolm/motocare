@@ -643,14 +643,18 @@ export default function GaragePage() {
   // Calculate statistics
   const stats = {
     totalVehicles: vehicles.length,
-    totalMileage: vehicles.reduce((sum, v) => sum + v.current_mileage, 0),
+    totalMileage: vehicles.reduce(
+      (sum, v) => sum + (v.current_mileage || 0),
+      0
+    ),
     averageMileage: vehicles.length
       ? Math.round(
-          vehicles.reduce((sum, v) => sum + v.current_mileage, 0) /
+          vehicles.reduce((sum, v) => sum + (v.current_mileage || 0), 0) /
             vehicles.length
         )
       : 0,
     vehiclesNeedingService: vehicles.filter((v) => {
+      if (!v.last_service_date) return false;
       const lastService = new Date(v.last_service_date);
       const today = new Date();
       const daysSinceService =
@@ -658,20 +662,23 @@ export default function GaragePage() {
       return daysSinceService > 180; // Vehicles needing service after 6 months
     }).length,
     serviceDueIn30Days: vehicles.filter((v) => {
+      if (!v.last_service_date) return false;
       const lastService = new Date(v.last_service_date);
       const today = new Date();
       const daysSinceService =
         (today.getTime() - lastService.getTime()) / (1000 * 60 * 60 * 24);
       return daysSinceService > 150 && daysSinceService <= 180; // Vehicles due for service in next 30 days
     }).length,
-    totalValue: vehicles.reduce((sum, v) => sum + v.purchase_price, 0),
+    totalValue: vehicles.reduce((sum, v) => sum + (v.purchase_price || 0), 0),
     averageAge: vehicles.length
       ? Math.round(
           vehicles.reduce(
             (sum, v) =>
               sum +
               (new Date().getFullYear() -
-                new Date(v.purchase_date).getFullYear()),
+                (v.purchase_date
+                  ? new Date(v.purchase_date).getFullYear()
+                  : new Date().getFullYear())),
             0
           ) / vehicles.length
         )
@@ -1182,7 +1189,9 @@ export default function GaragePage() {
                           Mileage
                         </Text>
                         <Text size="sm" c="dimmed" ml="auto">
-                          {vehicle.current_mileage.toLocaleString()} miles
+                          {vehicle.current_mileage
+                            ? `${vehicle.current_mileage.toLocaleString()} miles`
+                            : "-"}
                         </Text>
                       </Group>
 
@@ -1194,9 +1203,11 @@ export default function GaragePage() {
                           Last Service
                         </Text>
                         <Text size="sm" c="dimmed" ml="auto">
-                          {new Date(
-                            vehicle.last_service_date
-                          ).toLocaleDateString()}
+                          {vehicle.last_service_date
+                            ? new Date(
+                                vehicle.last_service_date
+                              ).toLocaleDateString()
+                            : "-"}
                         </Text>
                       </Group>
 
@@ -1384,7 +1395,9 @@ export default function GaragePage() {
                               Mileage
                             </Text>
                             <Text fw={500}>
-                              {service.mileage.toLocaleString()} miles
+                              {service.mileage
+                                ? `${service.mileage.toLocaleString()} miles`
+                                : "-"}
                             </Text>
                           </Stack>
                         </Group>
@@ -1398,7 +1411,9 @@ export default function GaragePage() {
                                 Cost
                               </Text>
                               <Text fw={500}>
-                                TZS {service.cost.toLocaleString()}
+                                {service.cost
+                                  ? `TZS ${service.cost.toLocaleString()}`
+                                  : "-"}
                               </Text>
                             </Stack>
                           </Group>
@@ -1503,7 +1518,9 @@ export default function GaragePage() {
                           Amount
                         </Text>
                         <Text fw={500} size="lg">
-                          TZS {expense.amount.toLocaleString()}
+                          {expense.amount
+                            ? `TZS ${expense.amount.toLocaleString()}`
+                            : "-"}
                         </Text>
                       </Stack>
                     </Group>
