@@ -108,17 +108,28 @@ export default function SignInPage() {
                 transition={{ duration: 0.5 }}
               >
                 <Group gap="xs" justify="center" mb="md">
-                  <ThemeIcon
-                    size="xl"
-                    radius="md"
-                    variant="gradient"
-                    gradient={{ from: "blue", to: "cyan" }}
+                  <Link
+                    href="/"
+                    style={{ textDecoration: "none", color: "inherit" }}
                   >
-                    <IconCar size={24} />
-                  </ThemeIcon>
-                  <Text size="xl" fw={700} style={{ letterSpacing: "-0.5px" }}>
-                    MotoCare
-                  </Text>
+                    <Group gap="xs">
+                      <ThemeIcon
+                        size="xl"
+                        radius="md"
+                        variant="gradient"
+                        gradient={{ from: "blue", to: "cyan" }}
+                      >
+                        <IconCar size={24} />
+                      </ThemeIcon>
+                      <Text
+                        size="xl"
+                        fw={700}
+                        style={{ letterSpacing: "-0.5px" }}
+                      >
+                        MotoCare
+                      </Text>
+                    </Group>
+                  </Link>
                 </Group>
 
                 <AnimatePresence mode="wait">

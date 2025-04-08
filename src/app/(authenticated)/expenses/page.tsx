@@ -972,6 +972,7 @@ export default function Expenses() {
                       min={0}
                       required
                       leftSection={<IconWallet size={16} />}
+                      hideControls
                     />
                   </Group>
                   <DateInput

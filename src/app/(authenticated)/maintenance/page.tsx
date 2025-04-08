@@ -53,6 +53,7 @@ import {
   IconStethoscope,
   IconClipboardCheck,
   IconClipboardList,
+  IconRoad,
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
@@ -65,7 +66,7 @@ interface MaintenanceRecord {
   vehicle_id: string;
   type: "service" | "repair" | "inspection";
   date: string;
-  mileage: number;
+  mileage?: number;
   description: string;
   cost: number;
   service_provider: string;
@@ -381,7 +382,10 @@ export default function MaintenancePage() {
       if (sortField === "cost") {
         return multiplier * (a.cost - b.cost);
       }
-      return multiplier * (a.mileage - b.mileage);
+      if (a.mileage === undefined && b.mileage === undefined) return 0;
+      if (a.mileage === undefined) return 1;
+      if (b.mileage === undefined) return -1;
+      return b.mileage - a.mileage;
     });
 
   const stats = {
@@ -390,8 +394,10 @@ export default function MaintenancePage() {
     averageMileage:
       filteredRecords.length > 0
         ? Math.round(
-            filteredRecords.reduce((sum, record) => sum + record.mileage, 0) /
-              filteredRecords.length
+            filteredRecords.reduce(
+              (sum, record) => sum + (record.mileage || 0),
+              0
+            ) / filteredRecords.length
           )
         : 0,
     serviceCount: filteredRecords.filter((r) => r.type === "service").length,
@@ -992,16 +998,14 @@ export default function MaintenancePage() {
                                 </Group>
                               </Table.Td>
                               <Table.Td>
-                                <Group gap="xs">
-                                  <ThemeIcon
-                                    size="sm"
-                                    variant="light"
-                                    color="yellow"
-                                  >
-                                    <IconGauge size={14} />
+                                <Group>
+                                  <ThemeIcon size="sm" variant="light">
+                                    <IconRoad size={14} />
                                   </ThemeIcon>
                                   <Text>
-                                    {record.mileage.toLocaleString()} miles
+                                    {record.mileage
+                                      ? `${record.mileage.toLocaleString()} miles`
+                                      : "Mileage not recorded"}
                                   </Text>
                                 </Group>
                               </Table.Td>
@@ -1143,12 +1147,16 @@ export default function MaintenancePage() {
             <Grid.Col span={{ base: 12, md: 6 }}>
               <NumberInput
                 label="Mileage"
-                placeholder="Enter mileage"
-                required
+                placeholder="Enter current mileage (optional)"
                 value={addForm.mileage}
                 onChange={(value) =>
-                  setAddForm({ ...addForm, mileage: Number(value) })
+                  setAddForm({
+                    ...addForm,
+                    mileage: value ? Number(value) : undefined,
+                  })
                 }
+                min={0}
+                hideControls
               />
             </Grid.Col>
           </Grid>
@@ -1173,6 +1181,8 @@ export default function MaintenancePage() {
                 onChange={(value) =>
                   setAddForm({ ...addForm, cost: Number(value) })
                 }
+                min={0}
+                hideControls
               />
             </Grid.Col>
             <Grid.Col span={{ base: 12, md: 6 }}>
@@ -1272,12 +1282,16 @@ export default function MaintenancePage() {
 
           <NumberInput
             label="Mileage"
-            placeholder="Enter mileage"
-            required
+            placeholder="Enter current mileage (optional)"
             value={editForm.mileage}
             onChange={(value) =>
-              setEditForm({ ...editForm, mileage: Number(value) })
+              setEditForm({
+                ...editForm,
+                mileage: value ? Number(value) : undefined,
+              })
             }
+            min={0}
+            hideControls
           />
 
           <TextInput
@@ -1298,6 +1312,8 @@ export default function MaintenancePage() {
             onChange={(value) =>
               setEditForm({ ...editForm, cost: Number(value) })
             }
+            min={0}
+            hideControls
           />
 
           <TextInput

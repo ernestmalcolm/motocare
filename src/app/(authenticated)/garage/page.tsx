@@ -83,11 +83,12 @@ interface Vehicle {
   color_hex: string; // Hex color code
   purchase_date: string;
   purchase_price: number;
-  current_mileage: number;
+  current_mileage?: number;
   last_service_date: string;
   notes: string;
   created_at: string;
   updated_at: string;
+  is_archived?: boolean;
 }
 
 const COLOR_MAP: Record<string, { name: string; hex: string }> = {
@@ -275,10 +276,24 @@ export default function GaragePage() {
     { open: openExpensesModal, close: closeExpensesModal },
   ] = useDisclosure(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
-  const [editForm, setEditForm] = useState<Partial<Vehicle>>({});
-  const [addForm, setAddForm] = useState<Partial<Vehicle>>({
+  const [editForm, setEditForm] = useState<Partial<Vehicle>>({
     type: "car",
-    current_mileage: 0,
+    current_mileage: undefined,
+  });
+  const [addForm, setAddForm] = useState<Partial<Vehicle>>({
+    make: "",
+    model: "",
+    year: new Date().getFullYear(),
+    type: "car",
+    license_plate: "",
+    color: "",
+    color_hex: "#000000",
+    purchase_date: new Date().toISOString().split("T")[0],
+    purchase_price: 0,
+    current_mileage: undefined,
+    last_service_date: new Date().toISOString().split("T")[0],
+    notes: "",
+    is_archived: false,
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
@@ -641,49 +656,52 @@ export default function GaragePage() {
   });
 
   // Calculate statistics
-  const stats = {
-    totalVehicles: vehicles.length,
-    totalMileage: vehicles.reduce(
-      (sum, v) => sum + (v.current_mileage || 0),
-      0
-    ),
-    averageMileage: vehicles.length
-      ? Math.round(
-          vehicles.reduce((sum, v) => sum + (v.current_mileage || 0), 0) /
-            vehicles.length
-        )
-      : 0,
-    vehiclesNeedingService: vehicles.filter((v) => {
-      if (!v.last_service_date) return false;
-      const lastService = new Date(v.last_service_date);
-      const today = new Date();
-      const daysSinceService =
-        (today.getTime() - lastService.getTime()) / (1000 * 60 * 60 * 24);
-      return daysSinceService > 180; // Vehicles needing service after 6 months
-    }).length,
-    serviceDueIn30Days: vehicles.filter((v) => {
-      if (!v.last_service_date) return false;
-      const lastService = new Date(v.last_service_date);
-      const today = new Date();
-      const daysSinceService =
-        (today.getTime() - lastService.getTime()) / (1000 * 60 * 60 * 24);
-      return daysSinceService > 150 && daysSinceService <= 180; // Vehicles due for service in next 30 days
-    }).length,
-    totalValue: vehicles.reduce((sum, v) => sum + (v.purchase_price || 0), 0),
-    averageAge: vehicles.length
-      ? Math.round(
-          vehicles.reduce(
-            (sum, v) =>
-              sum +
-              (new Date().getFullYear() -
-                (v.purchase_date
-                  ? new Date(v.purchase_date).getFullYear()
-                  : new Date().getFullYear())),
-            0
-          ) / vehicles.length
-        )
-      : 0,
-  };
+  const stats = useMemo(() => {
+    const activeVehicles = vehicles.filter((v) => !v.is_archived);
+    return {
+      totalVehicles: activeVehicles.length,
+      totalValue: activeVehicles.reduce((sum, v) => sum + v.purchase_price, 0),
+      averageAge:
+        activeVehicles.length > 0
+          ? Math.round(
+              activeVehicles.reduce(
+                (sum, v) =>
+                  sum +
+                  (new Date().getFullYear() - new Date(v.year).getFullYear()),
+                0
+              ) / activeVehicles.length
+            )
+          : 0,
+      totalMileage: activeVehicles.reduce(
+        (sum, v) => sum + (v.current_mileage || 0),
+        0
+      ),
+      averageMileage: activeVehicles.length
+        ? Math.round(
+            activeVehicles.reduce(
+              (sum, v) => sum + (v.current_mileage || 0),
+              0
+            ) / activeVehicles.length
+          )
+        : 0,
+      vehiclesNeedingService: activeVehicles.filter((v) => {
+        if (!v.last_service_date) return false;
+        const lastService = new Date(v.last_service_date);
+        const today = new Date();
+        const daysSinceService =
+          (today.getTime() - lastService.getTime()) / (1000 * 60 * 60 * 24);
+        return daysSinceService > 180; // Vehicles needing service after 6 months
+      }).length,
+      serviceDueIn30Days: activeVehicles.filter((v) => {
+        if (!v.last_service_date) return false;
+        const lastService = new Date(v.last_service_date);
+        const today = new Date();
+        const daysSinceService =
+          (today.getTime() - lastService.getTime()) / (1000 * 60 * 60 * 24);
+        return daysSinceService > 150 && daysSinceService <= 180; // Vehicles due for service in next 30 days
+      }).length,
+    };
+  }, [vehicles]);
 
   if (loading) {
     return (
@@ -747,6 +765,8 @@ export default function GaragePage() {
               onChange={(value) =>
                 setAddForm({ ...addForm, year: Number(value) })
               }
+              min={0}
+              hideControls
             />
             <TextInput
               label="License Plate"
@@ -806,13 +826,16 @@ export default function GaragePage() {
           <SimpleGrid cols={2} spacing="md">
             <NumberInput
               label="Current Mileage"
-              placeholder="Enter current mileage"
+              placeholder="Enter current mileage (optional)"
               value={addForm.current_mileage}
               onChange={(value) =>
-                setAddForm({ ...addForm, current_mileage: Number(value) })
+                setAddForm({
+                  ...addForm,
+                  current_mileage: value ? Number(value) : undefined,
+                })
               }
-              thousandSeparator=","
               min={0}
+              hideControls
               error={
                 addForm.current_mileage && addForm.current_mileage < 0
                   ? "Mileage cannot be negative"
@@ -847,6 +870,8 @@ export default function GaragePage() {
               }
               thousandSeparator=","
               prefix="TZS"
+              min={0}
+              hideControls
             />
             <DateInput
               label="Last Service Date"
@@ -1182,16 +1207,13 @@ export default function GaragePage() {
 
                     <Stack gap="md">
                       <Group gap="xs">
-                        <ThemeIcon size="md" variant="light" color="blue">
-                          <IconGauge size={16} />
+                        <ThemeIcon size="sm" variant="light">
+                          <IconGauge size={14} />
                         </ThemeIcon>
-                        <Text size="sm" fw={500}>
-                          Mileage
-                        </Text>
-                        <Text size="sm" c="dimmed" ml="auto">
+                        <Text>
                           {vehicle.current_mileage
                             ? `${vehicle.current_mileage.toLocaleString()} miles`
-                            : "-"}
+                            : "Mileage not recorded"}
                         </Text>
                       </Group>
 
@@ -1574,6 +1596,8 @@ export default function GaragePage() {
               onChange={(value) =>
                 setEditForm({ ...editForm, year: Number(value) })
               }
+              min={0}
+              hideControls
             />
             <Select
               label="Type"
@@ -1624,10 +1648,20 @@ export default function GaragePage() {
           <SimpleGrid cols={2} spacing="md">
             <NumberInput
               label="Current Mileage"
-              placeholder="Enter current mileage"
+              placeholder="Enter current mileage (optional)"
               value={editForm.current_mileage}
               onChange={(value) =>
-                setEditForm({ ...editForm, current_mileage: Number(value) })
+                setEditForm({
+                  ...editForm,
+                  current_mileage: value ? Number(value) : undefined,
+                })
+              }
+              min={0}
+              hideControls
+              error={
+                editForm.current_mileage && editForm.current_mileage < 0
+                  ? "Mileage cannot be negative"
+                  : null
               }
             />
             <TextInput

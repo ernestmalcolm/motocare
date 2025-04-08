@@ -101,6 +101,8 @@ type Car = {
 };
 
 const serviceTypes = [
+  "Normal Service",
+  "Full Service",
   "Oil Change",
   "Tire Rotation",
   "Brake Service",

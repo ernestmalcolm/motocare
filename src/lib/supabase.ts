@@ -8,7 +8,7 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
 export type Database = {
   public: {
     Tables: {
-      cars: {
+      vehicles: {
         Row: {
           id: string;
           user_id: string;
@@ -21,7 +21,7 @@ export type Database = {
           color_hex: string;
           purchase_date: string;
           purchase_price: number;
-          current_mileage: number;
+          current_mileage?: number;
           last_service_date: string;
           notes: string;
           created_at: string;
@@ -29,10 +29,10 @@ export type Database = {
           is_archived: boolean;
         };
         Insert: Omit<
-          Database["public"]["Tables"]["cars"]["Row"],
+          Database["public"]["Tables"]["vehicles"]["Row"],
           "id" | "created_at" | "updated_at"
         >;
-        Update: Partial<Database["public"]["Tables"]["cars"]["Insert"]>;
+        Update: Partial<Database["public"]["Tables"]["vehicles"]["Insert"]>;
       };
       services: {
         Row: {
