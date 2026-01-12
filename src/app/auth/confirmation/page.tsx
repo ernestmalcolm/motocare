@@ -1,11 +1,12 @@
 "use client";
 
 import { Container, Paper, Title, Text, Button, Stack, ThemeIcon } from "@mantine/core";
-import { IconMail, IconCheck } from "@tabler/icons-react";
+import { IconMail } from "@tabler/icons-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function ConfirmationPage() {
+function ConfirmationContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
 
@@ -65,5 +66,32 @@ export default function ConfirmationPage() {
         </Paper>
       </Stack>
     </Container>
+  );
+}
+
+export default function ConfirmationPage() {
+  return (
+    <Suspense fallback={
+      <Container size={420} my={40}>
+        <Stack align="center" gap="xl">
+          <ThemeIcon
+            size={80}
+            radius="xl"
+            variant="gradient"
+            gradient={{ from: "blue", to: "cyan" }}
+          >
+            <IconMail size={40} />
+          </ThemeIcon>
+          <Title order={2} ta="center">
+            Check Your Email
+          </Title>
+          <Text ta="center" c="dimmed">
+            Loading...
+          </Text>
+        </Stack>
+      </Container>
+    }>
+      <ConfirmationContent />
+    </Suspense>
   );
 }

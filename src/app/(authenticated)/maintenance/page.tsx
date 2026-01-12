@@ -288,7 +288,8 @@ export default function MaintenancePage() {
         } else {
           notifications.show({
             title: "Success",
-            message: "Maintenance record and linked expense updated successfully",
+            message:
+              "Maintenance record and linked expense updated successfully",
             color: "green",
           });
         }
@@ -332,7 +333,7 @@ export default function MaintenancePage() {
 
     try {
       setSavingAdd(true);
-      
+
       // Insert maintenance record
       const { data: maintenanceData, error: maintenanceError } = await supabase
         .from("maintenance_records")
@@ -350,7 +351,12 @@ export default function MaintenancePage() {
       if (maintenanceError) throw maintenanceError;
 
       // If checkbox is checked, also save as expense with link to maintenance
-      if (alsoSaveAsExpense && addForm.cost > 0 && maintenanceData) {
+      if (
+        alsoSaveAsExpense &&
+        addForm.cost &&
+        addForm.cost > 0 &&
+        maintenanceData
+      ) {
         const expenseDescription = addForm.service_provider
           ? `${addForm.description} - ${addForm.service_provider}`
           : addForm.description;
