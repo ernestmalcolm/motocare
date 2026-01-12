@@ -30,11 +30,11 @@ import {
   IconUser,
   IconLogout,
   IconTools,
-  IconSettings,
-  IconHelp,
+  // IconSettings,
+  // IconHelp,
   IconDashboard,
-  IconChartBar,
-  IconReport,
+  // IconChartBar,
+  // IconReport,
   IconBellRinging,
   IconCarSuv,
   IconWallet,
@@ -52,12 +52,13 @@ const mainNavItems = [
   { icon: IconWallet, label: "Expenses", href: "/expenses" },
 ];
 
-const secondaryNavItems = [
-  { icon: IconChartBar, label: "Analytics", href: "/analytics" },
-  { icon: IconReport, label: "Reports", href: "/reports" },
-  { icon: IconSettings, label: "Settings", href: "/settings" },
-  { icon: IconHelp, label: "Help & Support", href: "/help" },
-];
+// TODO: Implement these features in the future
+// const secondaryNavItems = [
+//   { icon: IconChartBar, label: "Analytics", href: "/analytics" },
+//   { icon: IconReport, label: "Reports", href: "/reports" },
+//   { icon: IconSettings, label: "Settings", href: "/settings" },
+//   { icon: IconHelp, label: "Help & Support", href: "/help" },
+// ];
 
 export default function AuthenticatedLayout({
   children,
@@ -316,7 +317,8 @@ export default function AuthenticatedLayout({
             />
           ))}
 
-          <Divider my="xs" />
+          {/* TODO: Implement these features in the future */}
+          {/* <Divider my="xs" />
 
           <Text size="xs" fw={500} c="dimmed" px="xs" mb="xs">
             TOOLS & SETTINGS
@@ -348,7 +350,7 @@ export default function AuthenticatedLayout({
               }}
               className="group"
             />
-          ))}
+          ))} */}
         </Stack>
       </AppShell.Navbar>
 

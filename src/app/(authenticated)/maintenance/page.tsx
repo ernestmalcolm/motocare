@@ -29,6 +29,7 @@ import {
   ComboboxItem,
   Transition,
   ScrollArea,
+  Switch,
 } from "@mantine/core";
 import { DateInput, DatePickerInput } from "@mantine/dates";
 import {
@@ -63,7 +64,7 @@ import Link from "next/link";
 
 interface MaintenanceRecord {
   id: string;
-  vehicle_id: string;
+  car_id: string;
   type: "service" | "repair" | "inspection";
   date: string;
   mileage?: number;
@@ -73,7 +74,7 @@ interface MaintenanceRecord {
   notes: string;
   created_at: string;
   updated_at: string;
-  vehicle?: Database["public"]["Tables"]["cars"]["Row"];
+  vehicle?: Database["public"]["Tables"]["vehicles"]["Row"];
 }
 
 export default function MaintenancePage() {
@@ -92,7 +93,7 @@ export default function MaintenancePage() {
     useState<MaintenanceRecord | null>(null);
   const [editForm, setEditForm] = useState<Partial<MaintenanceRecord>>({});
   const [addForm, setAddForm] = useState<Partial<MaintenanceRecord>>({
-    vehicle_id: undefined,
+    car_id: undefined,
     type: "service",
     date: undefined,
     mileage: 0,
@@ -114,6 +115,7 @@ export default function MaintenancePage() {
   const [savingAdd, setSavingAdd] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [alsoSaveAsExpense, setAlsoSaveAsExpense] = useState(false);
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
     null,
     null,
@@ -165,11 +167,11 @@ export default function MaintenancePage() {
         .select(
           `
           *,
-          vehicle:vehicles(make, model, year)
+          vehicle:vehicles!maintenance_records_car_id_fkey(make, model, year)
         `
         )
         .in(
-          "vehicle_id",
+          "car_id",
           vehicles.map((v) => v.id)
         )
         .order("date", { ascending: false });
@@ -237,7 +239,7 @@ export default function MaintenancePage() {
       const { error } = await supabase
         .from("maintenance_records")
         .update({
-          vehicle_id: editForm.vehicle_id,
+          car_id: editForm.car_id,
           type: editForm.type,
           date: editForm.date,
           mileage: editForm.mileage,
@@ -251,11 +253,52 @@ export default function MaintenancePage() {
 
       if (error) throw error;
 
-      notifications.show({
-        title: "Success",
-        message: "Maintenance record updated successfully",
-        color: "green",
-      });
+      // Sync with linked expense if it exists
+      const { data: linkedExpense } = await supabase
+        .from("expenses")
+        .select("id")
+        .eq("maintenance_record_id", selectedRecord.id)
+        .single();
+
+      if (linkedExpense) {
+        const expenseDescription = editForm.service_provider
+          ? `${editForm.description} - ${editForm.service_provider}`
+          : editForm.description;
+
+        const { error: expenseError } = await supabase
+          .from("expenses")
+          .update({
+            car_id: editForm.car_id,
+            date: editForm.date,
+            amount: editForm.cost,
+            description: expenseDescription,
+            notes: editForm.notes || "",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", linkedExpense.id);
+
+        if (expenseError) {
+          console.error("Error syncing expense:", expenseError);
+          notifications.show({
+            title: "Partial Success",
+            message:
+              "Maintenance record updated, but failed to sync linked expense",
+            color: "yellow",
+          });
+        } else {
+          notifications.show({
+            title: "Success",
+            message: "Maintenance record and linked expense updated successfully",
+            color: "green",
+          });
+        }
+      } else {
+        notifications.show({
+          title: "Success",
+          message: "Maintenance record updated successfully",
+          color: "green",
+        });
+      }
 
       closeEditModal();
       setSelectedRecord(null);
@@ -274,7 +317,7 @@ export default function MaintenancePage() {
 
   const handleAdd = async () => {
     if (
-      !addForm.vehicle_id ||
+      !addForm.car_id ||
       !addForm.date ||
       !addForm.description ||
       !addForm.service_provider
@@ -289,26 +332,69 @@ export default function MaintenancePage() {
 
     try {
       setSavingAdd(true);
-      const { error } = await supabase.from("maintenance_records").insert([
-        {
-          ...addForm,
-          notes: addForm.notes || "",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ]);
+      
+      // Insert maintenance record
+      const { data: maintenanceData, error: maintenanceError } = await supabase
+        .from("maintenance_records")
+        .insert([
+          {
+            ...addForm,
+            notes: addForm.notes || "",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        ])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (maintenanceError) throw maintenanceError;
 
-      notifications.show({
-        title: "Success",
-        message: "Maintenance record added successfully",
-        color: "green",
-      });
+      // If checkbox is checked, also save as expense with link to maintenance
+      if (alsoSaveAsExpense && addForm.cost > 0 && maintenanceData) {
+        const expenseDescription = addForm.service_provider
+          ? `${addForm.description} - ${addForm.service_provider}`
+          : addForm.description;
+
+        const { error: expenseError } = await supabase.from("expenses").insert([
+          {
+            car_id: addForm.car_id,
+            category: "maintenance",
+            date: addForm.date,
+            amount: addForm.cost,
+            description: expenseDescription,
+            notes: addForm.notes || "",
+            maintenance_record_id: maintenanceData.id, // Link to maintenance record
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        ]);
+
+        if (expenseError) {
+          console.error("Error adding expense:", expenseError);
+          notifications.show({
+            title: "Partial Success",
+            message:
+              "Maintenance record added, but failed to save as expense. Please add it manually.",
+            color: "yellow",
+          });
+        } else {
+          notifications.show({
+            title: "Success",
+            message: "Maintenance record and expense added successfully",
+            color: "green",
+          });
+        }
+      } else {
+        notifications.show({
+          title: "Success",
+          message: "Maintenance record added successfully",
+          color: "green",
+        });
+      }
 
       closeAddModal();
       setAddForm({
-        vehicle_id: undefined,
+        car_id: undefined,
         type: "service",
         date: undefined,
         mileage: 0,
@@ -317,6 +403,7 @@ export default function MaintenancePage() {
         service_provider: "",
         notes: "",
       });
+      setAlsoSaveAsExpense(false);
       fetchRecords();
     } catch (error) {
       console.error("Error adding record:", error);
@@ -333,7 +420,7 @@ export default function MaintenancePage() {
   const openEditRecordModal = (record: MaintenanceRecord) => {
     setSelectedRecord(record);
     setEditForm({
-      vehicle_id: record.vehicle_id,
+      car_id: record.car_id,
       type: record.type,
       date: record.date,
       mileage: record.mileage,
@@ -362,7 +449,7 @@ export default function MaintenancePage() {
           .includes(searchQuery.toLowerCase());
 
       const matchesVehicle =
-        !selectedVehicle || record.vehicle_id === selectedVehicle;
+        !selectedVehicle || record.car_id === selectedVehicle;
       const matchesType = !selectedType || record.type === selectedType;
 
       const recordDate = new Date(record.date);
@@ -1080,7 +1167,10 @@ export default function MaintenancePage() {
 
       <Modal
         opened={addModalOpened}
-        onClose={closeAddModal}
+        onClose={() => {
+          closeAddModal();
+          setAlsoSaveAsExpense(false);
+        }}
         title={
           <Group gap="xs">
             <ThemeIcon variant="light" color="blue" size="sm">
@@ -1101,9 +1191,9 @@ export default function MaintenancePage() {
                 label="Vehicle"
                 placeholder="Select vehicle"
                 required
-                value={addForm.vehicle_id}
+                value={addForm.car_id}
                 onChange={(value) =>
-                  setAddForm({ ...addForm, vehicle_id: value || undefined })
+                  setAddForm({ ...addForm, car_id: value || undefined })
                 }
                 data={vehicles.map((v) => ({
                   value: v.id,
@@ -1157,6 +1247,7 @@ export default function MaintenancePage() {
                 }
                 min={0}
                 hideControls
+                thousandSeparator=","
               />
             </Grid.Col>
           </Grid>
@@ -1183,6 +1274,7 @@ export default function MaintenancePage() {
                 }
                 min={0}
                 hideControls
+                thousandSeparator=","
               />
             </Grid.Col>
             <Grid.Col span={{ base: 12, md: 6 }}>
@@ -1206,10 +1298,33 @@ export default function MaintenancePage() {
             minRows={3}
           />
 
+          <Card withBorder radius="md" p="md" bg="blue.0">
+            <Stack gap="xs">
+              <Group gap="xs">
+                <ThemeIcon variant="light" color="blue" size="md">
+                  <IconCurrencyDollar size={18} />
+                </ThemeIcon>
+                <Text fw={500} size="sm">
+                  Expense Tracking
+                </Text>
+              </Group>
+              <Switch
+                label="Also save as expense"
+                description="Automatically create an expense entry for this maintenance record"
+                checked={alsoSaveAsExpense}
+                onChange={(e) => setAlsoSaveAsExpense(e.currentTarget.checked)}
+                mt="xs"
+              />
+            </Stack>
+          </Card>
+
           <Group justify="flex-end" mt="md">
             <Button
               variant="light"
-              onClick={closeAddModal}
+              onClick={() => {
+                closeAddModal();
+                setAlsoSaveAsExpense(false);
+              }}
               disabled={savingAdd}
             >
               Cancel
@@ -1242,9 +1357,9 @@ export default function MaintenancePage() {
             label="Vehicle"
             placeholder="Select vehicle"
             required
-            value={editForm.vehicle_id}
+            value={editForm.car_id}
             onChange={(value) =>
-              setEditForm({ ...editForm, vehicle_id: value || undefined })
+              setEditForm({ ...editForm, car_id: value || undefined })
             }
             data={vehicles.map((v) => ({
               value: v.id,
@@ -1292,6 +1407,7 @@ export default function MaintenancePage() {
             }
             min={0}
             hideControls
+            thousandSeparator=","
           />
 
           <TextInput
@@ -1314,6 +1430,7 @@ export default function MaintenancePage() {
             }
             min={0}
             hideControls
+            thousandSeparator=","
           />
 
           <TextInput

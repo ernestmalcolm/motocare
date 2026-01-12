@@ -285,7 +285,6 @@ export default function Reminders() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      console.log("Starting data fetch...");
 
       // Get the current session
       const {
@@ -302,8 +301,6 @@ export default function Reminders() {
         console.error("No user session found");
         throw new Error("No user session found");
       }
-
-      console.log("Fetching vehicles for user:", session.user.id);
 
       // Fetch vehicles with all required fields
       const { data: vehiclesData, error: vehiclesError } = await supabase
@@ -331,18 +328,16 @@ export default function Reminders() {
 
       if (vehiclesError) {
         console.error("Error fetching vehicles:", vehiclesError);
-        throw vehiclesError;
+        const errorMessage = vehiclesError.message || JSON.stringify(vehiclesError) || "Unknown error";
+        throw new Error(`Failed to fetch vehicles: ${errorMessage}`);
       }
 
-      console.log("Fetched vehicles:", vehiclesData);
       setVehicles(vehiclesData || []);
 
       // Get vehicle IDs for the current user
       const vehicleIds = vehiclesData?.map((v) => v.id) || [];
-      console.log("Vehicle IDs:", vehicleIds);
 
       if (vehicleIds.length === 0) {
-        console.log("No vehicles found for user");
         setReminders([]);
         return;
       }
@@ -351,33 +346,33 @@ export default function Reminders() {
       const { data: remindersData, error: remindersError } = await supabase
         .from("reminders")
         .select("*")
-        .in("vehicle_id", vehicleIds)
+        .in("car_id", vehicleIds)
         .order("due_date", { ascending: true });
 
       if (remindersError) {
         console.error("Error fetching reminders:", remindersError);
-        throw remindersError;
+        const errorMessage = remindersError.message || JSON.stringify(remindersError) || "Unknown error";
+        throw new Error(`Failed to fetch reminders: ${errorMessage}`);
       }
-
-      console.log("Fetched reminders:", remindersData);
 
       // Transform the data to match our UI expectations
       const transformedReminders =
-        remindersData?.map((reminder) => ({
+        remindersData?.map((reminder: any) => ({
           ...reminder,
-          is_completed: reminder.status === "completed",
+          vehicle_id: reminder.car_id || reminder.vehicle_id, // Map car_id to vehicle_id for compatibility
         })) || [];
 
-      console.log("Transformed reminders:", transformedReminders);
       setReminders(transformedReminders);
     } catch (error) {
       console.error("Error in fetchData:", error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : typeof error === 'object' && error !== null
+        ? JSON.stringify(error)
+        : String(error) || "Failed to fetch data. Please try again.";
       notifications.show({
         title: "Error",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch data. Please try again.",
+        message: errorMessage,
         color: "red",
       });
     } finally {
@@ -411,7 +406,7 @@ export default function Reminders() {
         due_date: formData.type === "dated" ? formData.due_date : null,
         priority: formData.priority,
         notes: formData.notes,
-        vehicle_id: formData.vehicle_id,
+        car_id: formData.vehicle_id, // Map vehicle_id to car_id for database
         enable_notifications: formData.enable_notifications,
         notification_frequency: formData.notification_frequency,
         type: formData.type,
@@ -499,7 +494,7 @@ export default function Reminders() {
           due_date: editForm.due_date,
           priority: editForm.priority,
           notes: editForm.notes,
-          vehicle_id: editForm.vehicle_id,
+          car_id: editForm.vehicle_id, // Map vehicle_id to car_id for database
           enable_notifications: editForm.enable_notifications,
           notification_frequency: editForm.notification_frequency,
         })

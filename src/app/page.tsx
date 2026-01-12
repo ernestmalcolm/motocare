@@ -568,8 +568,7 @@ export default function LandingPage() {
                     >
                       Malcolm
                     </Text>
-                    , a passionate car enthusiast who has loved cars since he
-                    was a kid. His garage was home to his prized{" "}
+                    , a passionate car enthusiast who cherished his prized{" "}
                     <Text
                       component="span"
                       variant="gradient"
@@ -577,29 +576,7 @@ export default function LandingPage() {
                     >
                       Nissan
                     </Text>
-                    , a car he cherished deeply and maintained with utmost care.
-                    Despite his passion, he struggled with tracking maintenance
-                    due to incomplete service history from the previous owner
-                    and scattered maintenance records.
-                  </Text>
-                  <Text size="lg" c="dimmed">
-                    The breaking point came when his beloved{" "}
-                    <Text
-                      component="span"
-                      variant="gradient"
-                      gradient={{ from: "blue", to: "cyan" }}
-                    >
-                      Nissan
-                    </Text>{" "}
-                    developed major gearbox issues. Without maintenance records
-                    from the previous owner, he had no way of knowing the
-                    transmission fluid change was due at least six months ago.
-                    The repair cost him a fortune, and as he sat in the
-                    mechanic's waiting room, he wished there was a better way to
-                    manage vehicle maintenance - a digital platform that would
-                    keep track of everything, from routine oil changes to major
-                    service intervals, making it as simple as checking your
-                    phone.
+                    . Despite his love for cars, he struggled with tracking maintenance due to incomplete service history, which led to costly gearbox repairs when he missed a critical transmission fluid change. Sitting in the mechanic's waiting room, he envisioned a digital platform that would simplify vehicle maintenance, keeping track of everything from routine oil changes to major service intervals, all as easy as checking your phone.
                   </Text>
                 </Stack>
               </motion.div>

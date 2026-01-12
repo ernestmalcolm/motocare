@@ -116,6 +116,7 @@ export type Database = {
           description?: string;
           receipt_url?: string;
           notes?: string;
+          maintenance_record_id?: string | null;
           created_at: string;
           updated_at: string;
         };

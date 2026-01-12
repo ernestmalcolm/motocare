@@ -628,137 +628,263 @@ export default function Dashboard() {
 
         {/* Main Content */}
         <Grid>
-          {/* Upcoming Reminders */}
-          {loading ? (
-            <Grid.Col span={{ base: 12, md: 6 }}>
-              <ListCardSkeleton />
-            </Grid.Col>
-          ) : (
-            <Grid.Col span={{ base: 12, md: 6 }}>
-              <Transition
-                mounted={mounted}
-                transition="slide-down"
-                duration={600}
-                timingFunction="ease"
-              >
-                {(styles) => (
-                  <Card withBorder style={styles}>
-                    <Group justify="space-between" mb="md">
-                      <Group>
-                        <ThemeIcon
-                          size="lg"
-                          radius="md"
-                          variant="light"
-                          color="yellow"
-                        >
-                          <IconBell size={20} />
-                        </ThemeIcon>
-                        <Stack gap={0}>
-                          <Text fw={500} tt="uppercase">
-                            Upcoming Reminders
-                          </Text>
-                          <Text size="xs" c="dimmed">
-                            {upcomingReminders.length} reminders to address
-                          </Text>
-                        </Stack>
-                      </Group>
-                      <Button
-                        component={Link}
-                        href="/reminders"
-                        variant="light"
-                        size="xs"
-                      >
-                        View All
-                      </Button>
-                    </Group>
-                    <Stack gap="md">
-                      {upcomingReminders.map((reminder, index) => {
-                        const dueDate = new Date(reminder.due_date);
-                        const daysUntilDue = Math.ceil(
-                          (dueDate.getTime() - new Date().getTime()) /
-                            (1000 * 60 * 60 * 24)
-                        );
-                        const isUrgent = daysUntilDue <= 3;
-
-                        return (
-                          <Transition
-                            key={reminder.id}
-                            mounted={mounted}
-                            transition="slide-down"
-                            duration={600}
-                            timingFunction="ease"
+          {/* Left Column: Reminders and Expenses stacked */}
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <Stack gap="md">
+              {/* Upcoming Reminders */}
+              {loading ? (
+                <ListCardSkeleton />
+              ) : (
+                <Transition
+                  mounted={mounted}
+                  transition="slide-down"
+                  duration={600}
+                  timingFunction="ease"
+                >
+                  {(styles) => (
+                    <Card withBorder style={styles}>
+                      <Group justify="space-between" mb="md">
+                        <Group>
+                          <ThemeIcon
+                            size="lg"
+                            radius="md"
+                            variant="light"
+                            color="yellow"
                           >
-                            {(styles) => (
-                              <Paper
-                                withBorder
-                                p="md"
-                                radius="md"
-                                style={{
-                                  ...styles,
-                                  transitionDelay: `${index * 150}ms`,
-                                }}
-                              >
-                                <Group
-                                  justify="space-between"
-                                  align="flex-start"
-                                >
-                                  <Stack gap={4}>
-                                    <Group gap="xs">
-                                      <Text size="sm" fw={500} tt="capitalize">
-                                        {reminder.title}
-                                      </Text>
-                                      {isUrgent && (
-                                        <Badge
-                                          size="sm"
-                                          variant="light"
-                                          color="red"
-                                          leftSection={
-                                            <IconAlertTriangle size={12} />
-                                          }
-                                        >
-                                          Urgent
-                                        </Badge>
-                                      )}
-                                    </Group>
-                                    <Group gap="xs">
-                                      <IconCalendarTime
-                                        size={14}
-                                        style={{
-                                          color: "var(--mantine-color-dimmed)",
-                                        }}
-                                      />
-                                      <Text size="xs" c="dimmed">
-                                        Due{" "}
-                                        {daysUntilDue === 0
-                                          ? "today"
-                                          : daysUntilDue === 1
-                                          ? "tomorrow"
-                                          : `in ${daysUntilDue} days`}
-                                      </Text>
-                                    </Group>
-                                  </Stack>
-                                  <Badge
-                                    size="sm"
-                                    variant="light"
-                                    color={getPriorityColor(reminder.priority)}
-                                    tt="capitalize"
-                                  >
-                                    {reminder.priority}
-                                  </Badge>
-                                </Group>
-                              </Paper>
-                            )}
-                          </Transition>
-                        );
-                      })}
-                    </Stack>
-                  </Card>
-                )}
-              </Transition>
-            </Grid.Col>
-          )}
+                            <IconBell size={20} />
+                          </ThemeIcon>
+                          <Stack gap={0}>
+                            <Text fw={500} tt="uppercase">
+                              Upcoming Reminders
+                            </Text>
+                            <Text size="xs" c="dimmed">
+                              {upcomingReminders.length} reminders to address
+                            </Text>
+                          </Stack>
+                        </Group>
+                        <Button
+                          component={Link}
+                          href="/reminders"
+                          variant="light"
+                          size="xs"
+                        >
+                          View All
+                        </Button>
+                      </Group>
+                      <Stack gap="md">
+                        {upcomingReminders.length > 0 ? (
+                          upcomingReminders.map((reminder, index) => {
+                            const dueDate = new Date(reminder.due_date);
+                            const daysUntilDue = Math.ceil(
+                              (dueDate.getTime() - new Date().getTime()) /
+                                (1000 * 60 * 60 * 24)
+                            );
+                            const isUrgent = daysUntilDue <= 3;
 
-          {/* Recent Maintenance */}
+                            return (
+                              <Transition
+                                key={reminder.id}
+                                mounted={mounted}
+                                transition="slide-down"
+                                duration={600}
+                                timingFunction="ease"
+                              >
+                                {(styles) => (
+                                  <Paper
+                                    withBorder
+                                    p="md"
+                                    radius="md"
+                                    style={{
+                                      ...styles,
+                                      transitionDelay: `${index * 150}ms`,
+                                    }}
+                                  >
+                                    <Group
+                                      justify="space-between"
+                                      align="flex-start"
+                                    >
+                                      <Stack gap={4}>
+                                        <Group gap="xs">
+                                          <Text size="sm" fw={500} tt="capitalize">
+                                            {reminder.title}
+                                          </Text>
+                                          {isUrgent && (
+                                            <Badge
+                                              size="sm"
+                                              variant="light"
+                                              color="red"
+                                              leftSection={
+                                                <IconAlertTriangle size={12} />
+                                              }
+                                            >
+                                              Urgent
+                                            </Badge>
+                                          )}
+                                        </Group>
+                                        <Group gap="xs">
+                                          <IconCalendarTime
+                                            size={14}
+                                            style={{
+                                              color: "var(--mantine-color-dimmed)",
+                                            }}
+                                          />
+                                          <Text size="xs" c="dimmed">
+                                            Due{" "}
+                                            {daysUntilDue === 0
+                                              ? "today"
+                                              : daysUntilDue === 1
+                                              ? "tomorrow"
+                                              : `in ${daysUntilDue} days`}
+                                          </Text>
+                                        </Group>
+                                      </Stack>
+                                      <Badge
+                                        size="sm"
+                                        variant="light"
+                                        color={getPriorityColor(reminder.priority)}
+                                        tt="capitalize"
+                                      >
+                                        {reminder.priority}
+                                      </Badge>
+                                    </Group>
+                                  </Paper>
+                                )}
+                              </Transition>
+                            );
+                          })
+                        ) : (
+                          <Text size="sm" c="dimmed" ta="center" py="md">
+                            No upcoming reminders
+                          </Text>
+                        )}
+                      </Stack>
+                    </Card>
+                  )}
+                </Transition>
+              )}
+
+              {/* Recent Expenses */}
+              {loading ? (
+                <ListCardSkeleton />
+              ) : (
+                <Transition
+                  mounted={mounted}
+                  transition="slide-down"
+                  duration={600}
+                  timingFunction="ease"
+                >
+                  {(styles) => (
+                    <Card withBorder style={styles}>
+                      <Group justify="space-between" mb="md">
+                        <Group>
+                          <ThemeIcon
+                            size="lg"
+                            radius="md"
+                            variant="light"
+                            color="red"
+                          >
+                            <IconWallet size={20} />
+                          </ThemeIcon>
+                          <Stack gap={0}>
+                            <Text fw={500} tt="uppercase">
+                              Recent Expenses
+                            </Text>
+                            <Stack gap={4}>
+                              <Text size="xs" c="dimmed">
+                                Latest transactions
+                                {dateRange[0] && dateRange[1] && (
+                                  <Text size="xs" c="dimmed">
+                                    {dateRange[0].toLocaleDateString()} -{" "}
+                                    {dateRange[1].toLocaleDateString()}
+                                  </Text>
+                                )}
+                              </Text>
+                              <Text size="xs" c="dimmed">
+                                Total: TZS {totalExpenses.toLocaleString()}
+                              </Text>
+                            </Stack>
+                          </Stack>
+                        </Group>
+                        <Button
+                          component={Link}
+                          href="/expenses"
+                          variant="light"
+                          size="xs"
+                        >
+                          View All
+                        </Button>
+                      </Group>
+                      <Stack gap="md">
+                        {filteredExpenses.map((expense, index) => {
+                          const vehicle = vehicles.find(
+                            (v) => v.id === expense.vehicle_id
+                          );
+                          return (
+                            <Transition
+                              key={expense.id}
+                              mounted={mounted}
+                              transition="slide-down"
+                              duration={600}
+                              timingFunction="ease"
+                            >
+                              {(styles) => (
+                                <Paper
+                                  withBorder
+                                  p="md"
+                                  radius="md"
+                                  style={{
+                                    ...styles,
+                                    transitionDelay: `${index * 150}ms`,
+                                  }}
+                                >
+                                  <Group justify="space-between">
+                                    <Stack gap={4}>
+                                      <Text size="sm" fw={500} tt="capitalize">
+                                        {expense.category}
+                                      </Text>
+                                      <Group gap="xs">
+                                        <IconCar
+                                          size={14}
+                                          style={{
+                                            color: "var(--mantine-color-dimmed)",
+                                          }}
+                                        />
+                                        <Text size="xs" c="dimmed">
+                                          {vehicle
+                                            ? `${vehicle.make} ${vehicle.model}`
+                                            : "Unknown Vehicle"}
+                                        </Text>
+                                        <IconCalendar
+                                          size={14}
+                                          style={{
+                                            color: "var(--mantine-color-dimmed)",
+                                          }}
+                                        />
+                                        <Text size="xs" c="dimmed">
+                                          {new Date(
+                                            expense.date
+                                          ).toLocaleDateString()}
+                                        </Text>
+                                      </Group>
+                                    </Stack>
+                                    <Text fw={500} c="red">
+                                      TZS {expense.amount.toLocaleString()}
+                                    </Text>
+                                  </Group>
+                                </Paper>
+                              )}
+                            </Transition>
+                          );
+                        })}
+                      </Stack>
+                    </Card>
+                  )}
+                </Transition>
+              )}
+            </Stack>
+          </Grid.Col>
+
+          {/* Right Column: Maintenance */}
           {loading ? (
             <Grid.Col span={{ base: 12, md: 6 }}>
               <ListCardSkeleton />
@@ -867,129 +993,6 @@ export default function Dashboard() {
                                   </Stack>
                                   <Text fw={500} c="green">
                                     TZS {record.cost.toLocaleString()}
-                                  </Text>
-                                </Group>
-                              </Paper>
-                            )}
-                          </Transition>
-                        );
-                      })}
-                    </Stack>
-                  </Card>
-                )}
-              </Transition>
-            </Grid.Col>
-          )}
-
-          {/* Recent Expenses */}
-          {loading ? (
-            <Grid.Col span={{ base: 12, md: 6 }}>
-              <ListCardSkeleton />
-            </Grid.Col>
-          ) : (
-            <Grid.Col span={{ base: 12, md: 6 }}>
-              <Transition
-                mounted={mounted}
-                transition="slide-down"
-                duration={600}
-                timingFunction="ease"
-              >
-                {(styles) => (
-                  <Card withBorder style={styles}>
-                    <Group justify="space-between" mb="md">
-                      <Group>
-                        <ThemeIcon
-                          size="lg"
-                          radius="md"
-                          variant="light"
-                          color="red"
-                        >
-                          <IconWallet size={20} />
-                        </ThemeIcon>
-                        <Stack gap={0}>
-                          <Text fw={500} tt="uppercase">
-                            Recent Expenses
-                          </Text>
-                          <Stack gap={4}>
-                            <Text size="xs" c="dimmed">
-                              Latest transactions
-                              {dateRange[0] && dateRange[1] && (
-                                <Text size="xs" c="dimmed">
-                                  {dateRange[0].toLocaleDateString()} -{" "}
-                                  {dateRange[1].toLocaleDateString()}
-                                </Text>
-                              )}
-                            </Text>
-                            <Text size="xs" c="dimmed">
-                              Total: TZS {totalExpenses.toLocaleString()}
-                            </Text>
-                          </Stack>
-                        </Stack>
-                      </Group>
-                      <Button
-                        component={Link}
-                        href="/expenses"
-                        variant="light"
-                        size="xs"
-                      >
-                        View All
-                      </Button>
-                    </Group>
-                    <Stack gap="md">
-                      {filteredExpenses.map((expense, index) => {
-                        const vehicle = vehicles.find(
-                          (v) => v.id === expense.vehicle_id
-                        );
-                        return (
-                          <Transition
-                            key={expense.id}
-                            mounted={mounted}
-                            transition="slide-down"
-                            duration={600}
-                            timingFunction="ease"
-                          >
-                            {(styles) => (
-                              <Paper
-                                withBorder
-                                p="md"
-                                radius="md"
-                                style={{
-                                  ...styles,
-                                  transitionDelay: `${index * 150}ms`,
-                                }}
-                              >
-                                <Group justify="space-between">
-                                  <Stack gap={4}>
-                                    <Text size="sm" fw={500} tt="capitalize">
-                                      {expense.category}
-                                    </Text>
-                                    <Group gap="xs">
-                                      <IconCar
-                                        size={14}
-                                        style={{
-                                          color: "var(--mantine-color-dimmed)",
-                                        }}
-                                      />
-                                      <Text size="xs" c="dimmed">
-                                        {vehicle
-                                          ? `${vehicle.make} ${vehicle.model}`
-                                          : "Unknown Vehicle"}
-                                      </Text>
-                                      <IconCalendar
-                                        size={14}
-                                        style={{
-                                          color: "var(--mantine-color-dimmed)",
-                                        }}
-                                      />
-                                      <Text size="xs" c="dimmed">
-                                        {new Date(
-                                          expense.date
-                                        ).toLocaleDateString()}
-                                      </Text>
-                                    </Group>
-                                  </Stack>
-                                  <Text fw={500} c="red">
-                                    TZS {expense.amount.toLocaleString()}
                                   </Text>
                                 </Group>
                               </Paper>

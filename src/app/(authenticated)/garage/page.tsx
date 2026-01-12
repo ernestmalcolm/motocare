@@ -10,16 +10,13 @@ import {
   Stack,
   Card,
   Grid,
-  rem,
   Badge,
   ActionIcon,
   Menu,
   Loader,
-  Progress,
   Tooltip,
   Divider,
   Paper,
-  RingProgress,
   ThemeIcon,
   Modal,
   TextInput,
@@ -44,24 +41,16 @@ import {
   IconGauge,
   IconCalendar,
   IconNotes,
-  IconTag,
-  IconLicense,
   IconColorSwatch,
   IconCheckupList,
   IconTruck,
   IconBike,
   IconBus,
-  IconQuestionMark,
   IconSearch,
   IconFilter,
   IconChartBar,
-  IconGasStation,
   IconTools,
   IconAlertTriangle,
-  IconX,
-  IconTrendingUp,
-  IconTrendingDown,
-  IconAlertCircle,
   IconCurrencyDollar,
   IconBuilding,
   IconWallet,
@@ -276,6 +265,7 @@ export default function GaragePage() {
     { open: openExpensesModal, close: closeExpensesModal },
   ] = useDisclosure(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Vehicle>>({
     type: "car",
     current_mileage: undefined,
@@ -327,23 +317,15 @@ export default function GaragePage() {
       } = await supabase.auth.getSession();
 
       if (!session?.user?.id) {
-        console.log("No user ID available");
         setLoading(false);
         return;
       }
-
-      console.log("Fetching vehicles for user:", session.user.id);
 
       const { data, error } = await supabase
         .from("vehicles")
         .select("*")
         .eq("user_id", session.user.id)
         .order("created_at", { ascending: false });
-
-      console.log("Raw Supabase response:", { data, error });
-      console.log("Data type:", typeof data);
-      console.log("Is data an array?", Array.isArray(data));
-      console.log("Data length:", data?.length);
 
       if (error) {
         console.error("Supabase error:", error);
@@ -357,11 +339,8 @@ export default function GaragePage() {
       }
 
       if (!data || data.length === 0) {
-        console.log("No vehicles found for user:", session.user.id);
         setVehicles([]);
       } else {
-        console.log(`Found ${data.length} vehicles for user:`, session.user.id);
-        console.log("First vehicle:", data[0]);
         setVehicles(data);
       }
     } catch (error) {
@@ -372,7 +351,6 @@ export default function GaragePage() {
         color: "red",
       });
     } finally {
-      console.log("Setting loading to false");
       setLoading(false);
     }
   };
@@ -419,6 +397,7 @@ export default function GaragePage() {
     if (!selectedVehicle) return;
 
     try {
+      setSavingEdit(true);
       const { error } = await supabase
         .from("vehicles")
         .update({
@@ -453,6 +432,8 @@ export default function GaragePage() {
         message: "Failed to update vehicle",
         color: "red",
       });
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -504,7 +485,7 @@ export default function GaragePage() {
       type: vehicle.type,
       license_plate: vehicle.license_plate,
       color: vehicle.color,
-      color_hex: vehicle.color_hex || vehicle.color_hex,
+      color_hex: vehicle.color_hex || "#000000",
       current_mileage: vehicle.current_mileage,
       last_service_date: vehicle.last_service_date,
       notes: vehicle.notes,
@@ -526,7 +507,7 @@ export default function GaragePage() {
         .select(
           `
           id,
-          vehicle_id,
+          car_id,
           type,
           date,
           mileage,
@@ -538,7 +519,7 @@ export default function GaragePage() {
           updated_at
         `
         )
-        .eq("vehicle_id", vehicle.id)
+        .eq("car_id", vehicle.id)
         .eq("type", "service")
         .order("date", { ascending: false });
 
@@ -546,7 +527,7 @@ export default function GaragePage() {
         console.error("Error fetching maintenance records:", error);
         notifications.show({
           title: "Error",
-          message: "Failed to fetch maintenance records",
+          message: `Failed to fetch maintenance records: ${error.message || "Unknown error"}`,
           color: "red",
         });
         return;
@@ -586,10 +567,18 @@ export default function GaragePage() {
       const { data, error } = await supabase
         .from("expenses")
         .select("*")
-        .eq("vehicle_id", vehicle.id)
+        .eq("car_id", vehicle.id)
         .order("date", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching expenses:", error);
+        notifications.show({
+          title: "Error",
+          message: `Failed to fetch expenses: ${error.message || "Unknown error"}`,
+          color: "red",
+        });
+        return;
+      }
       setExpenses(data || []);
     } catch (error) {
       console.error("Error fetching expenses:", error);
@@ -605,9 +594,7 @@ export default function GaragePage() {
   };
 
   const handleAddVehicle = () => {
-    console.log("handleAddVehicle clicked");
     setSelectedVehicle(null);
-    console.log("Setting addForm with default values");
     setAddForm({
       make: "",
       model: "",
@@ -621,12 +608,10 @@ export default function GaragePage() {
       last_service_date: undefined,
       notes: "",
     });
-    console.log("Opening add modal");
     setAddModalOpened(true);
   };
 
   useEffect(() => {
-    console.log("useEffect triggered");
     fetchVehicles().finally(() => {
       setTimeout(() => {
         setMounted(true);
@@ -767,6 +752,7 @@ export default function GaragePage() {
               }
               min={0}
               hideControls
+              thousandSeparator=","
             />
             <TextInput
               label="License Plate"
@@ -816,8 +802,8 @@ export default function GaragePage() {
             <ColorInput
               label="Color"
               placeholder="Select color"
-              value={addForm.color_hex}
-              onChange={(value) => setAddForm({ ...addForm, color_hex: value })}
+              value={addForm.color_hex || ""}
+              onChange={(value) => setAddForm({ ...addForm, color_hex: value || "" })}
               format="hex"
               swatches={Object.keys(COLOR_MAP)}
             />
@@ -836,6 +822,7 @@ export default function GaragePage() {
               }
               min={0}
               hideControls
+              thousandSeparator=","
               error={
                 addForm.current_mileage && addForm.current_mileage < 0
                   ? "Mileage cannot be negative"
@@ -1598,6 +1585,7 @@ export default function GaragePage() {
               }
               min={0}
               hideControls
+              thousandSeparator=","
             />
             <Select
               label="Type"
@@ -1636,9 +1624,9 @@ export default function GaragePage() {
             <ColorInput
               label="Color"
               placeholder="Select color"
-              value={editForm.color_hex}
+              value={editForm.color_hex || "#000000"}
               onChange={(value) =>
-                setEditForm({ ...editForm, color_hex: value })
+                setEditForm({ ...editForm, color_hex: value || "#000000" })
               }
               format="hex"
               swatches={Object.keys(COLOR_MAP)}
@@ -1658,6 +1646,7 @@ export default function GaragePage() {
               }
               min={0}
               hideControls
+              thousandSeparator=","
               error={
                 editForm.current_mileage && editForm.current_mileage < 0
                   ? "Mileage cannot be negative"
@@ -1685,10 +1674,12 @@ export default function GaragePage() {
           />
 
           <Group justify="flex-end" mt="md">
-            <Button variant="light" onClick={closeEditModal}>
+            <Button variant="light" onClick={closeEditModal} disabled={savingEdit}>
               Cancel
             </Button>
-            <Button onClick={handleEdit}>Save Changes</Button>
+            <Button onClick={handleEdit} loading={savingEdit}>
+              Save Changes
+            </Button>
           </Group>
         </Stack>
       </Modal>

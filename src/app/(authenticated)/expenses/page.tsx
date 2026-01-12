@@ -58,7 +58,7 @@ import { notifications } from "@mantine/notifications";
 import Link from "next/link";
 
 type Expense = Database["public"]["Tables"]["expenses"]["Row"];
-type Vehicle = Database["public"]["Tables"]["cars"]["Row"];
+type Vehicle = Database["public"]["Tables"]["vehicles"]["Row"];
 
 export default function Expenses() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -66,6 +66,8 @@ export default function Expenses() {
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [saving, setSaving] = useState(false);
   const [expenseType, setExpenseType] = useState<
     "fuel" | "maintenance" | "insurance" | "taxes" | "accessories" | "other"
   >("fuel");
@@ -134,7 +136,11 @@ export default function Expenses() {
         .eq("user_id", session.user.id)
         .order("created_at", { ascending: false });
 
-      if (vehiclesError) throw vehiclesError;
+      if (vehiclesError) {
+        console.error("Error fetching vehicles:", vehiclesError);
+        const errorMessage = vehiclesError.message || JSON.stringify(vehiclesError) || "Unknown error";
+        throw new Error(`Failed to fetch vehicles: ${errorMessage}`);
+      }
 
       setVehicles(vehiclesData || []);
 
@@ -144,19 +150,28 @@ export default function Expenses() {
         const { data: expensesData, error: expensesError } = await supabase
           .from("expenses")
           .select("*")
-          .in("vehicle_id", vehicleIds)
+          .in("car_id", vehicleIds)
           .order("date", { ascending: false });
 
-        if (expensesError) throw expensesError;
+        if (expensesError) {
+          console.error("Error fetching expenses:", expensesError);
+          const errorMessage = expensesError.message || JSON.stringify(expensesError) || "Unknown error";
+          throw new Error(`Failed to fetch expenses: ${errorMessage}`);
+        }
         setExpenses(expensesData || []);
       } else {
         setExpenses([]);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : typeof error === 'object' && error !== null
+        ? JSON.stringify(error)
+        : String(error) || "Failed to fetch data. Please try again.";
       notifications.show({
         title: "Error",
-        message: "Failed to fetch data. Please try again.",
+        message: errorMessage,
         color: "red",
       });
       setVehicles([]);
@@ -169,25 +184,123 @@ export default function Expenses() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { error } = await supabase.from("expenses").insert([
-        {
-          car_id: formData.car_id,
-          category: formData.category,
-          date: formData.date,
-          amount: formData.amount,
-          description: formData.description,
-          receipt_url: formData.receipt_url,
-          notes: formData.notes,
-        },
-      ]);
+      setSaving(true);
 
-      if (error) throw error;
+      if (selectedExpense) {
+        // Update existing expense
+        const { error } = await supabase
+          .from("expenses")
+          .update({
+            car_id: formData.car_id,
+            category: formData.category,
+            date: formData.date,
+            amount: formData.amount,
+            description: formData.description,
+            receipt_url: formData.receipt_url,
+            notes: formData.notes,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", selectedExpense.id);
+
+        if (error) throw error;
+
+        // Sync with linked maintenance record if it exists
+        if (selectedExpense.maintenance_record_id) {
+          const { data: linkedMaintenance } = await supabase
+            .from("maintenance_records")
+            .select("*")
+            .eq("id", selectedExpense.maintenance_record_id)
+            .single();
+
+          if (linkedMaintenance) {
+            // Extract service provider from description if it contains " - "
+            const descriptionParts = formData.description.split(" - ");
+            const maintenanceDescription = descriptionParts[0];
+            const serviceProvider =
+              descriptionParts.length > 1 ? descriptionParts[1] : linkedMaintenance.service_provider;
+
+            const { error: maintenanceError } = await supabase
+              .from("maintenance_records")
+              .update({
+                car_id: formData.car_id,
+                date: formData.date,
+                cost: formData.amount,
+                description: maintenanceDescription,
+                service_provider: serviceProvider,
+                notes: formData.notes || "",
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", selectedExpense.maintenance_record_id);
+
+            if (maintenanceError) {
+              console.error("Error syncing maintenance:", maintenanceError);
+              notifications.show({
+                title: "Partial Success",
+                message:
+                  "Expense updated, but failed to sync linked maintenance record",
+                color: "yellow",
+              });
+            } else {
+              notifications.show({
+                title: "Success",
+                message: "Expense and linked maintenance record updated successfully",
+                color: "green",
+              });
+            }
+          } else {
+            notifications.show({
+              title: "Success",
+              message: "Expense updated successfully",
+              color: "green",
+            });
+          }
+        } else {
+          notifications.show({
+            title: "Success",
+            message: "Expense updated successfully",
+            color: "green",
+          });
+        }
+      } else {
+        // Insert new expense
+        const { error } = await supabase.from("expenses").insert([
+          {
+            car_id: formData.car_id,
+            category: formData.category,
+            date: formData.date,
+            amount: formData.amount,
+            description: formData.description,
+            receipt_url: formData.receipt_url,
+            notes: formData.notes,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        ]);
+
+        if (error) throw error;
+
+        notifications.show({
+          title: "Success",
+          message: "Expense added successfully",
+          color: "green",
+        });
+      }
 
       setModalOpen(false);
+      setSelectedExpense(null);
       resetForm();
       fetchData();
     } catch (error) {
       console.error("Error saving expense:", error);
+      notifications.show({
+        title: "Error",
+        message: selectedExpense
+          ? "Failed to update expense. Please try again."
+          : "Failed to add expense. Please try again.",
+        color: "red",
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -201,6 +314,7 @@ export default function Expenses() {
       receipt_url: "",
       notes: "",
     });
+    setSelectedExpense(null);
   };
 
   const handleDelete = async (id: string) => {
@@ -818,6 +932,7 @@ export default function Expenses() {
                           <Menu.Item
                             leftSection={<IconEdit size={14} />}
                             onClick={() => {
+                              setSelectedExpense(expense);
                               setFormData({
                                 car_id: expense.car_id,
                                 category: expense.category as
@@ -895,7 +1010,7 @@ export default function Expenses() {
                 {getCategoryIcon(formData.category)}
               </ThemeIcon>
               <Text fw={500}>
-                {formData.car_id ? "Edit Expense" : "Add New Expense"}
+                {selectedExpense ? "Edit Expense" : "Add New Expense"}
               </Text>
             </Group>
           }
@@ -973,6 +1088,7 @@ export default function Expenses() {
                       required
                       leftSection={<IconWallet size={16} />}
                       hideControls
+                      thousandSeparator=","
                     />
                   </Group>
                   <DateInput
@@ -1045,6 +1161,7 @@ export default function Expenses() {
                     setModalOpen(false);
                     resetForm();
                   }}
+                  disabled={saving}
                 >
                   Cancel
                 </Button>
@@ -1053,8 +1170,9 @@ export default function Expenses() {
                   leftSection={<IconPlus size={16} />}
                   variant="gradient"
                   gradient={{ from: "blue", to: "cyan", deg: 45 }}
+                  loading={saving}
                 >
-                  {formData.car_id ? "Update Expense" : "Add Expense"}
+                  {selectedExpense ? "Update Expense" : "Add Expense"}
                 </Button>
               </Group>
             </Stack>

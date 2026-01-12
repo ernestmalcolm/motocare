@@ -133,7 +133,7 @@ export default function SignUpPage() {
         });
 
         // Redirect to a confirmation page or show a message
-        router.push("/auth/confirmation");
+        router.push(`/auth/confirmation?email=${encodeURIComponent(email)}`);
       } else {
         throw new Error("Failed to create account");
       }
